@@ -152,6 +152,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+void CapivaraImpostora(GLFWwindow *window);
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
@@ -196,6 +197,10 @@ bool keyD = false;
 float luz_x = 0.0;
 float luz_y = 0.0;
 float luz = 0;
+
+float prev_time;
+float speed;
+float speedLuz;
 
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
@@ -260,7 +265,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - 00332800 - Matheus Rodrigues Fonseca", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - Trabalho Final - Douglas e Matheus", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -318,7 +323,7 @@ int main(int argc, char* argv[])
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
     ObjModel capivaramodel("../../data/capivara.obj");
-    ComputeNormals(&capivaramodel);
+    //ComputeNormals(&capivaramodel);
     BuildTrianglesAndAddToVirtualScene(&capivaramodel);
 
 
@@ -339,14 +344,27 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    float prev_time = (float) glfwGetTime();
-    float speed = 2.0f;
+    prev_time = (float) glfwGetTime();
+    speed = 2.0f;
+    speedLuz = 1.0f;
+
     rng = rand() % NUM_CAPIVARAS;
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
-        // Aqui executamos as operações de renderização
+        CapivaraImpostora(window);
+    }
+
+    // Finalizamos o uso dos recursos do sistema operacional
+    glfwTerminate();
+
+    // Fim do programa
+    return 0;
+}
+
+void CapivaraImpostora(GLFWwindow *window) {
+// Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
         // definida como coeficientes RGBA: Red, Green, Blue, Alpha; isto é:
@@ -368,10 +386,10 @@ int main(int argc, char* argv[])
         // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
         // controladas pelo mouse do usuário. Veja as funções CursorPosCallback()
         // e ScrollCallback().
-        float r = g_CameraDistance;
-        float y = r*sin(g_CameraPhi);
-        float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
-        float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
+        //float r = g_CameraDistance;
+        //float y = r*sin(g_CameraPhi);
+        //float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
+        //float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -424,14 +442,14 @@ int main(int argc, char* argv[])
         float cur_time = (float)glfwGetTime();
         float delta_t = cur_time - prev_time;
         prev_time = cur_time;
-        luz += delta_t * speed;
-        luz_x = cos(luz);
-        luz_y = sin(luz);
+        luz += delta_t * speedLuz;
+        //luz_x = cos(luz);
+        //luz_y = sin(luz);
 
-        //if (keyW) luz_y -= speed * delta_t;
-        //if (keyA) luz_x -= speed * delta_t;
-        //if (keyS) luz_y += speed * delta_t;
-        //if (keyD) luz_x += speed * delta_t;
+        if (keyW) luz_x -= speed * delta_t;
+        if (keyA) luz_y += speed * delta_t;
+        if (keyS) luz_x += speed * delta_t;
+        if (keyD) luz_y -= speed * delta_t;
 
         glUniform2f(g_coords, luz_x, luz_y);
 
@@ -442,9 +460,9 @@ int main(int argc, char* argv[])
         #define CAPIVARA2 4
 
         for (int i = 0; i < NUM_CAPIVARAS; i++) {
-            model = Matrix_Translate(cos(PI/2 * i),-0.6f,sin(PI/2 * i))
+            model = Matrix_Translate(cos(PI/2 * i+luz),-0.6f,sin(PI/2 * i+luz))
                   * Matrix_Rotate_X(-PI/2)
-                  * Matrix_Rotate_Z(-PI/2*i + 3*PI/2);
+                  * Matrix_Rotate_Z(-PI/2*i + 3*PI/2 - luz);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             if (rng == i) {
                 glUniform1i(g_object_id_uniform, CAPIVARA2);
@@ -490,13 +508,6 @@ int main(int argc, char* argv[])
         // definidas anteriormente usando glfwSet*Callback() serão chamadas
         // pela biblioteca GLFW.
         glfwPollEvents();
-    }
-
-    // Finalizamos o uso dos recursos do sistema operacional
-    glfwTerminate();
-
-    // Fim do programa
-    return 0;
 }
 
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
