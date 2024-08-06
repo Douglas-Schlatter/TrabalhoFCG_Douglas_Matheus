@@ -20,6 +20,15 @@ uniform vec2 pos_luz;
 out vec4 position_world;
 out vec4 normal;
 out vec3 cor_v;
+out vec4 position_model;
+out vec2 texcoords;
+
+// Parâmetros da axis-aligned bounding box (AABB) do modelo
+uniform vec4 bbox_min;
+uniform vec4 bbox_max;
+
+
+uniform sampler2D TextureImage0;
 
 #define CAPIVARA2 4
 
@@ -55,6 +64,9 @@ void main()
 
     // Posição do vértice atual no sistema de coordenadas global (World).
     position_world = model * model_coefficients;
+
+    // Posição do vértice atual no sistema de coordenadas local do modelo.
+    position_model = model_coefficients;
 
     // Normal do vértice atual no sistema de coordenadas global (World).
     // Veja slides 123-151 do documento Aula_07_Transformacoes_Geometricas_3D.pdf.
@@ -92,8 +104,6 @@ void main()
     //vec4 l = normalize(camera_position - p);
         vec4 l = normalize(posL - p);
 
-
-
     // Vetor que define o sentido da câmera em relação ao ponto atual.
         vec4 v = normalize(camera_position - p);
 
@@ -106,6 +116,18 @@ void main()
         vec3 Ka = vec3(0.04,0.2,0.4); // Refletância ambiente
         float q = 32.0; // Expoente especular para o modelo de iluminação de Phong
 
+        float minx = bbox_min.x;
+        float maxx = bbox_max.x;
+
+        float miny = bbox_min.y;
+        float maxy = bbox_max.y;
+
+        float minz = bbox_min.z;
+        float maxz = bbox_max.z;
+
+        float U = (position_model.x - minx)/(maxx - minx);
+        float V = (position_model.y - miny)/(maxy - miny);
+
     // Espectro da fonte de iluminação
         vec3 I;
 
@@ -116,6 +138,8 @@ void main()
             I = vec3(0.0, 0.0, 0.0);
 
         }
+
+        vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
         // Espectro da luz ambiente
         vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
@@ -144,7 +168,7 @@ void main()
 
     // Cor final do fragmento calculada com uma combinação dos termos difuso,
     // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
-        cor_v = lambert_diffuse_term + ambient_term + phong_specular_term;
+        cor_v = Kd0 * (lambert_diffuse_term + ambient_term + phong_specular_term);
 
     // Cor final com correção gamma, considerando monitor sRGB.
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
