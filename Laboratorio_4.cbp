@@ -367,6 +367,7 @@
 		<Unit filename="include/glm/vec4.hpp" />
 		<Unit filename="include/glm/vector_relational.hpp" />
 		<Unit filename="include/matrices.h" />
+		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/tiny_obj_loader.h" />
 		<Unit filename="include/utils.h" />
 		<Unit filename="src/glad.c">
@@ -377,6 +378,7 @@
 		<Unit filename="src/shader_fragment2.glsl" />
 		<Unit filename="src/shader_vertex.glsl" />
 		<Unit filename="src/shader_vertex2.glsl" />
+		<Unit filename="src/stb_image.cpp" />
 		<Unit filename="src/textrendering.cpp" />
 		<Unit filename="src/tiny_obj_loader.cpp" />
 		<Extensions>

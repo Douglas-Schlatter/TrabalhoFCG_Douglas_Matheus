@@ -125,8 +125,8 @@ void main()
         float minz = bbox_min.z;
         float maxz = bbox_max.z;
 
-        float U = (position_model.x - minx)/(maxx - minx);
-        float V = (position_model.y - miny)/(maxy - miny);
+        float U = (position_model.y - miny)/(maxy - miny);
+        float V = (position_model.x - minx)/(maxx - minx);
 
     // Espectro da fonte de iluminação
         vec3 I;

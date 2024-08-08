@@ -115,7 +115,7 @@ void main()
         // Propriedades espectrais do plano
         Kd = vec3(0.2,0.2,0.2);
         Ks = vec3(0.3,0.3,0.3);
-        Ka = vec3(0.0,0.0,0.0);
+        Ka = vec3(0.1,0.1,0.1);
         q = 20.0;
 
         float minx = bbox_min.x;
@@ -146,8 +146,8 @@ void main()
         float minz = bbox_min.z;
         float maxz = bbox_max.z;
 
-        U = (position_model.x - minx)/(maxx - minx);
-        V = (position_model.y - miny)/(maxy - miny);
+        U = (position_model.y - miny)/(maxy - miny);
+        V = (position_model.x - minx)/(maxx - minx);
 
     }
     else if ( object_id == CAPIVARA2)
@@ -170,7 +170,6 @@ void main()
         I = vec3(1.0,1.0,1.0); // PREENCH AQUI o espectro da fonte de luz
     } else {
         I = vec3(0.0, 0.0, 0.0);
-
     }
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
