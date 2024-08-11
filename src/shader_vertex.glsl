@@ -12,6 +12,8 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform int object_id;
 uniform vec2 pos_luz;
+uniform int game_ID;
+uniform float tempo;
 
 // Atributos de vértice que serão gerados como saída ("out") pelo Vertex Shader.
 // ** Estes serão interpolados pelo rasterizador! ** gerando, assim, valores
@@ -23,6 +25,7 @@ out vec3 cor_v;
 out vec4 position_model;
 out vec2 texcoords;
 
+
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
 uniform vec4 bbox_min;
 uniform vec4 bbox_max;
@@ -31,6 +34,7 @@ uniform vec4 bbox_max;
 uniform sampler2D TextureImage0;
 
 #define CAPIVARA2 4
+#define HUD 5
 
 void main()
 {
@@ -46,7 +50,13 @@ void main()
     // deste Vertex Shader, a placa de vídeo (GPU) fará a divisão por W. Veja
     // slides 41-67 e 69-86 do documento Aula_09_Projecoes.pdf.
 
-    gl_Position = projection * view * model * model_coefficients;
+    if (object_id == HUD) {
+        gl_Position = model * model_coefficients;
+        //gl_Position = projection * view * model * model_coefficients;
+    }
+    else {
+        gl_Position = projection * view * model * model_coefficients;
+    }
 
     // Como as variáveis acima  (tipo vec4) são vetores com 4 coeficientes,
     // também é possível acessar e modificar cada coeficiente de maneira

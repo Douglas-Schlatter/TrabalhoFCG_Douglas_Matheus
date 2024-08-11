@@ -51,6 +51,11 @@
 #define PI 3.14159
 #define NUM_CAPIVARAS 4
 
+#define MAXTEMPODASH 1.0
+
+#define CAPIVARAIMPOSTORA 1
+#define DESVIECAPIVARA 2
+
 typedef enum {
     ESPERA = 0,
     ATENCAO = 1,
@@ -147,6 +152,7 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M,
 
 void TextRendering_ShowEstado(GLFWwindow* window, ESTADO_CAPIVARA estado, float tempo);
 void TextRendering_ShowCapPos(GLFWwindow* window, glm::vec2 capPos, glm::vec2 capPrevPos, glm::vec2 capNextPos);
+void TextRendering_ShowCapAngulo(GLFWwindow* window, glm::vec4 capView, float angulo);
 
 // Funções abaixo renderizam como texto na janela OpenGL algumas matrizes e
 // outras informações do programa. Definidas após main().
@@ -165,9 +171,10 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPos, float *prev_time, float speed, float speedCount, int rng);
-void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *prev_time, float speed, ESTADO_CAPIVARA *estado, float *tempoEstado, glm::vec2 *capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *capView, float *angulo);
-void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c);
+void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *prev_time, float speed, ESTADO_CAPIVARA *estado, float *tempoEstado, glm::vec2 *capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *capView, float *angulo, float *tempoDash);
+void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c, float *tempoDash);
 float easing(float tempo);
+void DrawHUD(float tempo);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -241,6 +248,9 @@ GLint g_view_uniform;
 GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_coords;
+GLint g_gameID;
+GLint g_tempo;
+
 GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
 
@@ -335,9 +345,11 @@ int main(int argc, char* argv[])
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
     ObjModel capivaramodel("../../data/capivara.obj");
-    ComputeNormals(&capivaramodel);
+    //ComputeNormals(&capivaramodel);
     BuildTrianglesAndAddToVirtualScene(&capivaramodel);
 
+    ObjModel hudTimermodel("../../data/timerHUD.obj");
+    BuildTrianglesAndAddToVirtualScene(&hudTimermodel);
 
     if ( argc > 1 )
     {
@@ -372,19 +384,20 @@ int main(int argc, char* argv[])
     // Jogo 2 //
     ////////////
     glm::vec4 camera_position_c = glm::vec4(0.0f, -0.45f, -1.0f, 1.0f);
-    ESTADO_CAPIVARA capEstado = ATENCAO;
-    float tempoEstado = 20.0;
-    glm::vec2 capPos = glm::vec2(0,0);
-    glm::vec2 capNextPos = glm::vec2(0,0);
-    glm::vec2 capPrevPos = glm::vec2(0,0);
-    glm::vec4 capView = glm::vec4(1.0,0.0,0,0);
+    ESTADO_CAPIVARA capEstado = ESPERA;
+    float tempoEstado = 3.0;
+    glm::vec2 capPos = glm::vec2(0, 0);
+    glm::vec2 capNextPos = glm::vec2(0, 0);
+    glm::vec2 capPrevPos = glm::vec2(0, 0);
+    glm::vec4 capView = glm::vec4(0.0, 0.0, 1.0, 0.0);
     capView = capView/norm(capView);
     float angulo;
+    float tempoDash = 0.0f;
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
-        DesvieCapivara(window, &camera_position_c, &prev_time, speed, &capEstado, &tempoEstado, &capPos, &capPrevPos, &capNextPos, &capView, &angulo);
+        DesvieCapivara(window, &camera_position_c, &prev_time, speed, &capEstado, &tempoEstado, &capPos, &capPrevPos, &capNextPos, &capView, &angulo, &tempoDash);
         //CapivaraImpostora(window, &luz_pos, &countCapPos, &prev_time, speed, speedCount, rng);
     }
 
@@ -413,6 +426,8 @@ void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPo
         // Pedimos para a GPU utilizar o programa de GPU criado acima (contendo
         // os shaders de vértice e fragmentos).
         glUseProgram(g_GpuProgramID);
+
+        glUniform1i(g_gameID, CAPIVARAIMPOSTORA);
 
         // Computamos a posição da câmera utilizando coordenadas esféricas.  As
         // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
@@ -542,7 +557,7 @@ void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPo
         glfwPollEvents();
 }
 
-void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *prev_time, float speed, ESTADO_CAPIVARA *estado, float *tempoEstado, glm::vec2 *capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *capView, float *angulo) {
+void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *prev_time, float speed, ESTADO_CAPIVARA *estado, float *tempoEstado, glm::vec2 *capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *capView, float *angulo, float *tempoDash) {
 // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -560,6 +575,8 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
         // Pedimos para a GPU utilizar o programa de GPU criado acima (contendo
         // os shaders de vértice e fragmentos).
         glUseProgram(g_GpuProgramID);
+
+        glUniform1i(g_gameID, DESVIECAPIVARA);
 
         // Computamos a posição da câmera utilizando coordenadas esféricas.  As
         // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
@@ -636,12 +653,12 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
         if (keyD) *camera_position_c += +u * speed * delta_t;
 
         if (*tempoEstado < 0.0)
-            LogicaCapivara(estado, tempoEstado, *capPos, capPrevPos, capNextPos, camera_position_c);
+            LogicaCapivara(estado, tempoEstado, *capPos, capPrevPos, capNextPos, camera_position_c, tempoDash);
 
         if (*estado == CORRE) { //Capivara vai da posição Prev até a posição Next
-
-            //capPos->x = capPrevPos->x + (capNextPos->x - capPrevPos->x) * easing(*tempoEstado/5);
-            //capPos->y = capPrevPos->y + (capNextPos->y - capPrevPos->y) * easing(*tempoEstado/5);
+            *tempoDash = std::min(*tempoDash + delta_t, (float)MAXTEMPODASH);
+            capPos->x = capPrevPos->x + (capNextPos->x - capPrevPos->x) * easing(*tempoDash/MAXTEMPODASH);
+            capPos->y = capPrevPos->y + (capNextPos->y - capPrevPos->y) * easing(*tempoDash/MAXTEMPODASH);
         }
 
         #define SPHERE 0
@@ -649,9 +666,17 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
         #define PLANE  2
         #define CAPIVARA 3
         #define CAPIVARA2 4
+        #define HUD 5
+
         if (*estado == ATENCAO) {
-            glm::vec4 capViewAux = *camera_position_c - glm::vec4(capPos->x, camera_position_c->y, capPos->y, 1.0f);
-            // Tentar fazer a capivara olhar para a camera
+            //Capivara olha para a câmera
+            glm::vec4 capViewNew = *camera_position_c - glm::vec4(capPos->x, camera_position_c->y, capPos->y, 1.0f);
+            capViewNew = capViewNew/norm(capViewNew);
+
+            //https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
+            *angulo += std::atan2(dotproduct(crossproduct(*capView, capViewNew), glm::vec4(0,1,0,0)), dotproduct(*capView, capViewNew));
+
+            *capView = capViewNew;
 
             model = Matrix_Translate(capPos->x,-0.6f,capPos->y)
                   * Matrix_Rotate_X(-PI/2)
@@ -707,10 +732,13 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
+        DrawHUD(*tempoEstado/3);
+
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
         TextRendering_ShowEstado(window, *estado, *tempoEstado);
         TextRendering_ShowCapPos(window, *capPos, *capPrevPos, *capNextPos);
+        TextRendering_ShowCapAngulo(window, *capView, *angulo);
 
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
         TextRendering_ShowProjection(window);
@@ -734,23 +762,50 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
         glfwPollEvents();
 }
 
-void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c) {
+void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c, float *tempoDash) {
     if (*estado == ESPERA) {
         *estado = ATENCAO;
-        *tempo = 5.0;
+        *tempo = 3.0;
     } else if (*estado == ATENCAO) {
         *estado = CORRE;
-        *tempo = 5.0;
+        *tempo = 3.0;
         *capPrevPos = capPos;
         *capNextPos = glm::vec2(camera_position_c->x, camera_position_c->z);
     } else if (*estado == CORRE) {
         *estado = ESPERA;
-        *tempo = 5.0;
+        *tempo = 3.0;
+        *tempoDash = 0.0;
     }
 }
 
 float easing(float tempo) {
-    return std::max(std::min((float)0.0, -tempo),(float)1.0);
+    //easeOutExpo
+    if (tempo == 1) {
+        return 1;
+    } else {
+        return 1 - std::pow(2,-10*tempo);
+    }
+}
+
+void DrawHUD(float tempo) {
+    //TODO
+    glm::mat4 model;
+
+    model = Matrix_Translate(0,0.9,0)
+          * Matrix_Scale(tempo,0.1,1);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+
+    glUniform1f(g_tempo, tempo);
+    glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+    glUniform1i(g_object_id_uniform, HUD);
+    DrawVirtualObject("the_hud");
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
@@ -881,6 +936,8 @@ void LoadShadersFromFiles()
     g_bbox_min_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_min");
     g_bbox_max_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_max");
     g_coords = glGetUniformLocation(g_GpuProgramID, "pos_luz");
+    g_gameID = glGetUniformLocation(g_GpuProgramID, "game_ID");
+    g_tempo = glGetUniformLocation(g_GpuProgramID, "tempo");
 
         // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(g_GpuProgramID);
@@ -1650,6 +1707,19 @@ void TextRendering_ShowCapPos(GLFWwindow* window, glm::vec2 capPos, glm::vec2 ca
     snprintf(buffer, 80, "pos = (%.2f, %.2f) prev = (%.2f, %.2f) next = (%.2f, %.2f)\n", capPos.x, capPos.y, capPrevPos.x, capPrevPos.y, capNextPos.x, capNextPos.y);
 
     TextRendering_PrintString(window, buffer, -1.0f+pad/5, -1.0f+pad, 1.0f);
+}
+
+void TextRendering_ShowCapAngulo(GLFWwindow* window, glm::vec4 capView, float angulo)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[80];
+    snprintf(buffer, 80, "capView: (%.2f, %.2f, %.2f) -> %.2f", capView.x, capView.y, capView.z, angulo);
+
+    TextRendering_PrintString(window, buffer, -1.0f+pad/5, -1.0f+pad*5, 1.0f);
 }
 
 
