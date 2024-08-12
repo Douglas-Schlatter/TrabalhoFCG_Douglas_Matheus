@@ -49,18 +49,53 @@
 #include "matrices.h"
 
 #define PI 3.14159
-#define NUM_CAPIVARAS 4
+#define NUM_JOGOS 2
 
 #define MAXTEMPODASH 1.0
 
-#define CAPIVARAIMPOSTORA 1
-#define DESVIECAPIVARA 2
 
+//Estado da capivara no jogo DESVIECAPIVARA
 typedef enum {
     ESPERA = 0,
     ATENCAO = 1,
     CORRE = 2
 } ESTADO_CAPIVARA;
+
+//Qual jogo está ativo no momento
+typedef enum {
+    NONE = 0,
+    CAPIVARAIMPOSTORA = 1,
+    DESVIECAPIVARA = 2
+} JOGO;
+
+typedef enum {
+    AGUARDE = 0,
+    EM_JOGO = 1,
+    ENTRE_JOGOS = 2
+} ESTADO_JOGO;
+
+struct VAR_CAP_IMPOSTORA {
+    glm::vec3 luz_pos;
+    float countCapPos;
+    float prev_time;
+    float speed;
+    float speedCount;
+    int rng;
+};
+
+struct VAR_DESVIE_CAP {
+    glm::vec4 camera_position_c;
+    float prev_time;
+    float speed;
+    ESTADO_CAPIVARA estado;
+    float tempoEstado;
+    glm::vec2 capPos;
+    glm::vec2 capPrevPos;
+    glm::vec2 capNextPos;
+    glm::vec4 capView;
+    float angulo;
+    float tempoDash;
+};
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -170,9 +205,10 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
-void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPos, float *prev_time, float speed, float speedCount, int rng);
-void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *prev_time, float speed, ESTADO_CAPIVARA *estado, float *tempoEstado, glm::vec2 *capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *capView, float *angulo, float *tempoDash);
+void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis);
+void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis);
 void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c, float *tempoDash);
+JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap);
 float easing(float tempo);
 void DrawHUD(float tempo);
 
@@ -219,6 +255,8 @@ bool keyA = false;
 bool keyS = false;
 bool keyD = false;
 
+JOGO jogoAtual = NONE;
+
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
@@ -258,6 +296,7 @@ GLuint g_NumLoadedTextures = 0;
 
 int main(int argc, char* argv[])
 {
+    std::srand(glfwGetTime());
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
     // sistema operacional, onde poderemos renderizar com OpenGL.
     int success = glfwInit();
@@ -368,37 +407,18 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
+    VAR_CAP_IMPOSTORA jogoCapImpostora;
+    VAR_DESVIE_CAP jogoDesvieCap;
 
-    float prev_time = (float) glfwGetTime();
-
-    ////////////////////////
-    // Capivara Impostora //
-    ////////////////////////
-    glm::vec3 luz_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    int rng = rand() % NUM_CAPIVARAS;
-    float countCapPos = 0;
-    const float speed = 2.0f;
-    const float speedCount = 1.0f;
-
-    ////////////
-    // Jogo 2 //
-    ////////////
-    glm::vec4 camera_position_c = glm::vec4(0.0f, -0.45f, -1.0f, 1.0f);
-    ESTADO_CAPIVARA capEstado = ESPERA;
-    float tempoEstado = 3.0;
-    glm::vec2 capPos = glm::vec2(0, 0);
-    glm::vec2 capNextPos = glm::vec2(0, 0);
-    glm::vec2 capPrevPos = glm::vec2(0, 0);
-    glm::vec4 capView = glm::vec4(0.0, 0.0, 1.0, 0.0);
-    capView = capView/norm(capView);
-    float angulo;
-    float tempoDash = 0.0f;
+    ESTADO_JOGO estadoAtual = AGUARDE;
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
-        DesvieCapivara(window, &camera_position_c, &prev_time, speed, &capEstado, &tempoEstado, &capPos, &capPrevPos, &capNextPos, &capView, &angulo, &tempoDash);
-        //CapivaraImpostora(window, &luz_pos, &countCapPos, &prev_time, speed, speedCount, rng);
+        if (jogoAtual == NONE) jogoAtual = TrocaDeJogo(&estadoAtual, &jogoCapImpostora, &jogoDesvieCap);
+
+        if (jogoAtual == DESVIECAPIVARA) DesvieCapivara(window, &jogoDesvieCap);
+        if (jogoAtual == CAPIVARAIMPOSTORA) CapivaraImpostora(window, &jogoCapImpostora);
     }
 
     // Finalizamos o uso dos recursos do sistema operacional
@@ -408,7 +428,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPos, float *prev_time, float speed, float speedCount, int rng) {
+void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis) {
 // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -487,18 +507,18 @@ void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPo
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
         float cur_time = (float)glfwGetTime();
-        float delta_t = cur_time - *prev_time;
-        *prev_time = cur_time;
-        *countCapPos += delta_t * speedCount;
+        float delta_t = cur_time - variaveis->prev_time;
+        variaveis->prev_time = cur_time;
+        variaveis->countCapPos += delta_t * variaveis->speedCount;
         //luz_x = cos(luz);
         //luz_y = sin(luz);
 
-        if (keyW) luz_pos->y += speed * delta_t;
-        if (keyA) luz_pos->x += speed * delta_t;
-        if (keyS) luz_pos->y -= speed * delta_t;
-        if (keyD) luz_pos->x -= speed * delta_t;
+        if (keyW) variaveis->luz_pos.y += variaveis->speed * delta_t;
+        if (keyA) variaveis->luz_pos.x += variaveis->speed * delta_t;
+        if (keyS) variaveis->luz_pos.y -= variaveis->speed * delta_t;
+        if (keyD) variaveis->luz_pos.x -= variaveis->speed * delta_t;
 
-        glUniform2f(g_coords, luz_pos->x, luz_pos->y);
+        glUniform2f(g_coords, variaveis->luz_pos.x, variaveis->luz_pos.y);
 
         #define SPHERE 0
         #define BUNNY  1
@@ -506,12 +526,12 @@ void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPo
         #define CAPIVARA 3
         #define CAPIVARA2 4
 
-        for (int i = 0; i < NUM_CAPIVARAS; i++) {
-            model = Matrix_Translate(cos(PI/2 * i+ *countCapPos),-0.6f,sin(PI/2 * i+ *countCapPos))
+        for (int i = 0; i < 4; i++) {
+            model = Matrix_Translate(cos(PI/2 * i+ variaveis->countCapPos),-0.6f,sin(PI/2 * i+ variaveis->countCapPos))
                   * Matrix_Rotate_X(-PI/2)
-                  * Matrix_Rotate_Z(-PI/2*i + 3*PI/2 - *countCapPos);
+                  * Matrix_Rotate_Z(-PI/2*i + 3*PI/2 - variaveis->countCapPos);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-            if (rng == i) {
+            if (variaveis->rng == i) {
                 glUniform1i(g_object_id_uniform, CAPIVARA2);
             }
             else {
@@ -557,7 +577,7 @@ void CapivaraImpostora(GLFWwindow *window, glm::vec3 *luz_pos, float *countCapPo
         glfwPollEvents();
 }
 
-void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *prev_time, float speed, ESTADO_CAPIVARA *estado, float *tempoEstado, glm::vec2 *capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *capView, float *angulo, float *tempoDash) {
+void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
 // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -596,7 +616,7 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::mat4 view = Matrix_Camera_View(*camera_position_c, camera_view, camera_up_vector);
+        glm::mat4 view = Matrix_Camera_View(variaveis->camera_position_c, camera_view, camera_up_vector);
 
         // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
@@ -642,23 +662,24 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
 
 
         float cur_time = (float)glfwGetTime();
-        float delta_t = cur_time - *prev_time;
-        *prev_time = cur_time;
-        *tempoEstado -= 1 * delta_t;
+        float delta_t = cur_time - variaveis->prev_time;
+        variaveis->prev_time = cur_time;
+        variaveis->tempoEstado -= 1 * delta_t;
 
 
-        if (keyW) *camera_position_c += -w * speed * delta_t;
-        if (keyA) *camera_position_c += -u * speed * delta_t;
-        if (keyS) *camera_position_c += +w * speed * delta_t;
-        if (keyD) *camera_position_c += +u * speed * delta_t;
+        if (keyW) variaveis->camera_position_c += -w * variaveis->speed * delta_t;
+        if (keyA) variaveis->camera_position_c += -u * variaveis->speed * delta_t;
+        if (keyS) variaveis->camera_position_c += +w * variaveis->speed * delta_t;
+        if (keyD) variaveis->camera_position_c += +u * variaveis->speed * delta_t;
 
-        if (*tempoEstado < 0.0)
-            LogicaCapivara(estado, tempoEstado, *capPos, capPrevPos, capNextPos, camera_position_c, tempoDash);
+        if (variaveis->tempoEstado < 0.0)
+            LogicaCapivara(&variaveis->estado, &variaveis->tempoEstado, variaveis->capPos, &variaveis->capPrevPos, &variaveis->capNextPos, &variaveis->camera_position_c, &variaveis->tempoDash);
 
-        if (*estado == CORRE) { //Capivara vai da posição Prev até a posição Next
-            *tempoDash = std::min(*tempoDash + delta_t, (float)MAXTEMPODASH);
-            capPos->x = capPrevPos->x + (capNextPos->x - capPrevPos->x) * easing(*tempoDash/MAXTEMPODASH);
-            capPos->y = capPrevPos->y + (capNextPos->y - capPrevPos->y) * easing(*tempoDash/MAXTEMPODASH);
+        if (variaveis->estado == CORRE) {
+            //Capivara vai da posição Prev até a posição Next
+            variaveis->tempoDash = std::min(variaveis->tempoDash + delta_t, (float)MAXTEMPODASH);
+            variaveis->capPos.x = variaveis->capPrevPos.x + (variaveis->capNextPos.x - variaveis->capPrevPos.x) * easing(variaveis->tempoDash/MAXTEMPODASH);
+            variaveis->capPos.y = variaveis->capPrevPos.y + (variaveis->capNextPos.y - variaveis->capPrevPos.y) * easing(variaveis->tempoDash/MAXTEMPODASH);
         }
 
         #define SPHERE 0
@@ -668,24 +689,24 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
         #define CAPIVARA2 4
         #define HUD 5
 
-        if (*estado == ATENCAO) {
+        if (variaveis->estado == ATENCAO) {
             //Capivara olha para a câmera
-            glm::vec4 capViewNew = *camera_position_c - glm::vec4(capPos->x, camera_position_c->y, capPos->y, 1.0f);
+            glm::vec4 capViewNew = variaveis->camera_position_c - glm::vec4(variaveis->capPos.x, variaveis->camera_position_c.y, variaveis->capPos.y, 1.0f);
             capViewNew = capViewNew/norm(capViewNew);
 
             //https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
-            *angulo += std::atan2(dotproduct(crossproduct(*capView, capViewNew), glm::vec4(0,1,0,0)), dotproduct(*capView, capViewNew));
+            variaveis->angulo += std::atan2(dotproduct(crossproduct(variaveis->capView, capViewNew), glm::vec4(0,1,0,0)), dotproduct(variaveis->capView, capViewNew));
 
-            *capView = capViewNew;
+            variaveis->capView = capViewNew;
 
-            model = Matrix_Translate(capPos->x,-0.6f,capPos->y)
+            model = Matrix_Translate(variaveis->capPos.x,-0.6f,variaveis->capPos.y)
                   * Matrix_Rotate_X(-PI/2)
-                  * Matrix_Rotate_Z(*angulo);
+                  * Matrix_Rotate_Z(variaveis->angulo);
             }
         else {
-            model = Matrix_Translate(capPos->x,-0.6f,capPos->y)
+            model = Matrix_Translate(variaveis->capPos.x,-0.6f,variaveis->capPos.y)
                 * Matrix_Rotate_X(-PI/2)
-                * Matrix_Rotate_Z(*angulo);
+                * Matrix_Rotate_Z(variaveis->angulo);
         }
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, CAPIVARA);
@@ -732,13 +753,14 @@ void DesvieCapivara(GLFWwindow *window, glm::vec4 *camera_position_c, float *pre
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        DrawHUD(*tempoEstado/3);
+        DrawHUD(variaveis->tempoEstado/3);
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
-        TextRendering_ShowEstado(window, *estado, *tempoEstado);
-        TextRendering_ShowCapPos(window, *capPos, *capPrevPos, *capNextPos);
-        TextRendering_ShowCapAngulo(window, *capView, *angulo);
+        TextRendering_ShowEstado(window, variaveis->estado, variaveis->tempoEstado);
+        TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
+        //TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
+        TextRendering_ShowCapAngulo(window, variaveis->capView, variaveis->angulo);
 
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
         TextRendering_ShowProjection(window);
@@ -772,7 +794,7 @@ void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm
         *capPrevPos = capPos;
         *capNextPos = glm::vec2(camera_position_c->x, camera_position_c->z);
     } else if (*estado == CORRE) {
-        *estado = ESPERA;
+        *estado = ATENCAO;
         *tempo = 3.0;
         *tempoDash = 0.0;
     }
@@ -787,8 +809,48 @@ float easing(float tempo) {
     }
 }
 
+JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap) {
+    *estado = ENTRE_JOGOS;
+    int rng = rand() % NUM_JOGOS + 1;
+
+    float prev_time = (float) glfwGetTime();
+
+    switch (rng) {
+    case CAPIVARAIMPOSTORA:
+        jogoCapImpostora->luz_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+        jogoCapImpostora->countCapPos = 0;
+        jogoCapImpostora->prev_time = prev_time;
+        jogoCapImpostora->speed = 2.0f;
+        jogoCapImpostora->speedCount = 1.0f;
+        jogoCapImpostora->rng = rand() % 4;
+        return CAPIVARAIMPOSTORA;
+        break;
+
+    case DESVIECAPIVARA:
+        jogoDesvieCap->camera_position_c = glm::vec4(0.0f, -0.45f, 1.0f, 1.0f);
+        jogoDesvieCap->estado = ESPERA;
+        jogoDesvieCap->tempoEstado = 3.0;
+        jogoDesvieCap->capPos = glm::vec2(0, -1);
+        jogoDesvieCap->capNextPos = glm::vec2(0, 0);
+        jogoDesvieCap->capPrevPos = glm::vec2(0, 0);
+        jogoDesvieCap->capView = glm::vec4(0.0, 0.0, 1.0, 0.0);
+        jogoDesvieCap->capView = jogoDesvieCap->capView/norm(jogoDesvieCap->capView);
+        jogoDesvieCap->angulo = 0;
+        jogoDesvieCap->tempoDash = 0.0f;
+        jogoDesvieCap->speed = 2.0f;
+        jogoDesvieCap->prev_time = prev_time;
+        g_CameraPhi = 0;
+        g_CameraTheta = PI;
+        return DESVIECAPIVARA;
+        break;
+
+    default:
+        return NONE;
+    }
+
+}
+
 void DrawHUD(float tempo) {
-    //TODO
     glm::mat4 model;
 
     model = Matrix_Translate(0,0.9,0)
@@ -796,15 +858,14 @@ void DrawHUD(float tempo) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
 
     glUniform1f(g_tempo, tempo);
     glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
     glUniform1i(g_object_id_uniform, HUD);
     DrawVirtualObject("the_hud");
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
 
 }
 
@@ -1581,7 +1642,8 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     // Se o usuário apertar a tecla O, utilizamos projeção ortográfica.
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
     {
-        g_UsePerspectiveProjection = false;
+        //g_UsePerspectiveProjection = false;
+        jogoAtual = NONE;
     }
 
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
