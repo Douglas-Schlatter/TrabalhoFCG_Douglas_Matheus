@@ -368,7 +368,9 @@ int main(int argc, char* argv[])
     //
     LoadShadersFromFiles();
 
-    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
+    LoadTextureImage("../../data/capivara.jpg");      // TextureImage0
+    LoadTextureImage("../../data/chao.jpg");      // TextureImage1
+    LoadTextureImage("../../data/parede.jpg");      // TextureImage2
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -655,6 +657,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
+        //glm::vec4 w = -glm::vec4(camera_view.x, camera_view.y, camera_view.z, 0);
         glm::vec4 w = -glm::vec4(camera_view.x, 0, camera_view.z, 0);
         w = w/norm(w);
         glm::vec4 u = crossproduct(camera_up_vector, w);
@@ -683,7 +686,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         }
 
         #define SPHERE 0
-        #define BUNNY  1
+        #define WALL  1
         #define PLANE  2
         #define CAPIVARA 3
         #define CAPIVARA2 4
@@ -712,7 +715,9 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         glUniform1i(g_object_id_uniform, CAPIVARA);
         DrawVirtualObject("object_0");
         DrawVirtualObject("object_1");
+        glUniform1i(g_object_id_uniform, 999);
         DrawVirtualObject("object_2");
+        glUniform1i(g_object_id_uniform, CAPIVARA);
         DrawVirtualObject("object_3");
 
         #define TAMANHO_SALA_X 3
@@ -725,32 +730,36 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
+        // Parede
         model = Matrix_Translate(TAMANHO_SALA_X,0,0)
               * Matrix_Scale(1,1,TAMANHO_SALA_Y)
-              * Matrix_Rotate_Z(PI/2);
+              * Matrix_Rotate_Z(PI/2)
+              * Matrix_Rotate_Y(PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, PLANE);
+        glUniform1i(g_object_id_uniform, WALL);
         DrawVirtualObject("the_plane");
 
         model = Matrix_Translate(-TAMANHO_SALA_X,0,0)
               * Matrix_Scale(1,1,TAMANHO_SALA_Y)
-              * Matrix_Rotate_Z(-PI/2);
+              * Matrix_Rotate_Z(-PI/2)
+              * Matrix_Rotate_Y(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, PLANE);
+        glUniform1i(g_object_id_uniform, WALL);
         DrawVirtualObject("the_plane");
 
         model = Matrix_Translate(0,0,TAMANHO_SALA_Y)
               * Matrix_Scale(TAMANHO_SALA_X,1,1)
               * Matrix_Rotate_X(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, PLANE);
+        glUniform1i(g_object_id_uniform, WALL);
         DrawVirtualObject("the_plane");
 
         model = Matrix_Translate(0,0,-TAMANHO_SALA_Y)
               * Matrix_Scale(TAMANHO_SALA_X,1,1)
-              * Matrix_Rotate_X(PI/2);
+              * Matrix_Rotate_X(PI/2)
+              * Matrix_Rotate_Y(PI);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, PLANE);
+        glUniform1i(g_object_id_uniform, WALL);
         DrawVirtualObject("the_plane");
 
         DrawHUD(variaveis->tempoEstado/3);

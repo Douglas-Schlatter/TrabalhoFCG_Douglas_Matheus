@@ -32,6 +32,7 @@ uniform vec4 bbox_max;
 
 
 uniform sampler2D TextureImage0;
+uniform sampler2D TextureImage1;
 
 #define CAPIVARA2 4
 #define HUD 5
@@ -121,22 +122,24 @@ void main()
         vec4 r = -l + 2 * n * (dot(n,l)); // PREENCHA AQUI o vetor de reflexão especular ideal
 
     // Parâmetros que definem as propriedades espectrais da superfície
-        vec3 Kd = vec3(0.08,0.4,0.8); // Refletância difusa
-        vec3 Ks = vec3(0.8,0.8,0.8); // Refletância especular
-        vec3 Ka = vec3(0.04,0.2,0.4); // Refletância ambiente
-        float q = 32.0; // Expoente especular para o modelo de iluminação de Phong
+        vec3 Kd = vec3(0.9,0.5,0.5);
+        vec3 Ks = vec3(0.8,0.8,0.8);
+        vec3 Ka = vec3(0.5,0.5,0.5);
+        float q = 32.0;
 
-        float minx = bbox_min.x;
-        float maxx = bbox_max.x;
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        vec4 p2 = (position_model - bbox_center)/length(position_model - bbox_center);
 
-        float miny = bbox_min.y;
-        float maxy = bbox_max.y;
+        float theta = atan(p2.z, p2.x)+M_PI;
+        float phi = asin(p2.x);
 
-        float minz = bbox_min.z;
-        float maxz = bbox_max.z;
+        //V = (theta + M_PI)/(2 * M_PI);
+        //U = (phi + M_PI_2)/M_PI;
 
-        float U = (position_model.y - miny)/(maxy - miny);
-        float V = (position_model.x - minx)/(maxx - minx);
+        float V = (position_model.y - bbox_min.y)/(bbox_max.y - bbox_min.y);
+        float U = theta/(2*M_PI);
+
+        vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
     // Espectro da fonte de iluminação
         vec3 I;
@@ -148,8 +151,6 @@ void main()
             I = vec3(0.0, 0.0, 0.0);
 
         }
-
-        vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
         // Espectro da luz ambiente
         vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente

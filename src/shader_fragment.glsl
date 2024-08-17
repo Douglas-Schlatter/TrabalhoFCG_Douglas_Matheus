@@ -24,7 +24,7 @@ uniform int game_ID;
 
 // Identificador que define qual objeto está sendo desenhado no momento
 #define SPHERE 0
-#define BUNNY  1
+#define WALL  1
 #define PLANE  2
 #define CAPIVARA  3
 #define CAPIVARA2  4
@@ -108,6 +108,8 @@ void Jogo1() {
     float U = 0.0;
     float V = 0.0;
 
+    vec3 Kd0 = vec3(1,1,1);
+
 
     if ( object_id == SPHERE )
     {
@@ -118,15 +120,6 @@ void Jogo1() {
         Ka = vec3(0.4,0.2,0.04);
         q = 1.0;
     }
-    else if ( object_id == BUNNY )
-    {
-        // PREENCHA AQUI
-        // Propriedades espectrais do coelho
-        Kd = vec3(0.08,0.4,0.8);
-        Ks = vec3(0.8,0.8,0.8);
-        Ka = vec3(0.04,0.2,0.4);
-        q = 32.0;
-    }
     else if ( object_id == PLANE )
     {
         // PREENCHA AQUI
@@ -136,36 +129,31 @@ void Jogo1() {
         Ka = vec3(0.1,0.1,0.1);
         q = 20.0;
 
-        float minx = bbox_min.x;
-        float maxx = bbox_max.x;
+        U = (position_model.x - bbox_min.x)/(bbox_max.x - bbox_min.x);
+        V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
 
-        float miny = bbox_min.y;
-        float maxy = bbox_max.y;
-
-        float minz = bbox_min.z;
-        float maxz = bbox_max.z;
-
-        U = (position_model.x - minx)/(maxx - minx);
-        V = (position_model.z - minz)/(maxz - minz);
+        Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
     }
     else if ( object_id == CAPIVARA)
     {
-        Kd = vec3(0.08,0.4,0.8);
+        Kd = vec3(0.9,0.5,0.5);
         Ks = vec3(0.8,0.8,0.8);
-        Ka = vec3(0.04,0.2,0.4);
+        Ka = vec3(0.5,0.5,0.5);
         q = 32.0;
 
-        float minx = bbox_min.x;
-        float maxx = bbox_max.x;
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        vec4 p2 = (position_model - bbox_center)/length(position_model - bbox_center);
 
-        float miny = bbox_min.y;
-        float maxy = bbox_max.y;
+        float theta = atan(p2.z, p2.x)+M_PI;
+        float phi = asin(p2.x);
 
-        float minz = bbox_min.z;
-        float maxz = bbox_max.z;
+        //V = (theta + M_PI)/(2 * M_PI);
+        //U = (phi + M_PI_2)/M_PI;
 
-        U = (position_model.y - miny)/(maxy - miny);
-        V = (position_model.x - minx)/(maxx - minx);
+        V = (position_model.y - bbox_min.y)/(bbox_max.y - bbox_min.y);
+        U = theta/(2*M_PI);
+
+        Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
     }
     else if ( object_id == CAPIVARA2)
@@ -189,9 +177,6 @@ void Jogo1() {
     } else {
         I = vec3(0.0, 0.0, 0.0);
     }
-
-    // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
     // Espectro da luz ambiente
     vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
@@ -247,17 +232,8 @@ void Jogo2() {
     // normais de cada vértice.
     vec4 n = normalize(normal);
 
-    // Posição da fonte de luz
-    vec4 posL = vec4(pos_luz.x, 2.0, pos_luz.y, 1.0);
-
-    // Direção da luz
-    vec4 vecL = normalize(camera_position - p);
-
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    //Tarefa 1
-    //vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
-    //Tarefa 2 parte 1
-    vec4 l = normalize(camera_position - p);
+    vec4 l = normalize(vec4(0,1,0,0));
 
 
 
@@ -273,6 +249,8 @@ void Jogo2() {
     vec3 Ka; // Refletância ambiente
     float q; // Expoente especular para o modelo de iluminação de Phong
 
+    vec3 Kd0 = vec3(1,1,1);
+
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
@@ -287,14 +265,19 @@ void Jogo2() {
         Ka = vec3(0.4,0.2,0.04);
         q = 1.0;
     }
-    else if ( object_id == BUNNY )
+    else if ( object_id == WALL )
     {
         // PREENCHA AQUI
         // Propriedades espectrais do coelho
-        Kd = vec3(0.08,0.4,0.8);
-        Ks = vec3(0.8,0.8,0.8);
-        Ka = vec3(0.04,0.2,0.4);
-        q = 32.0;
+        Kd = vec3(0.8,0.8,0.8);
+        Ks = vec3(0.3,0.3,0.3);
+        Ka = vec3(1,1,1);
+        q = 20.0;
+
+        U = position_model.x - floor(position_model.x);
+        V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
+
+        Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
     }
     else if ( object_id == PLANE )
     {
@@ -302,45 +285,41 @@ void Jogo2() {
         // Propriedades espectrais do plano
         Kd = vec3(0.2,0.2,0.2);
         Ks = vec3(0.3,0.3,0.3);
-        Ka = vec3(0.1,0.1,0.1);
+        Ka = vec3(0.5,0.5,0.5);
         q = 20.0;
 
-        float minx = bbox_min.x;
-        float maxx = bbox_max.x;
+        U = (position_model.x - bbox_min.x)/(bbox_max.x - bbox_min.x);
+        V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
 
-        float miny = bbox_min.y;
-        float maxy = bbox_max.y;
-
-        float minz = bbox_min.z;
-        float maxz = bbox_max.z;
-
-        U = (position_model.x - minx)/(maxx - minx);
-        V = (position_model.z - minz)/(maxz - minz);
+        Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
     }
     else if ( object_id == CAPIVARA)
     {
-        Kd = vec3(0.08,0.4,0.8);
+        Kd = vec3(0.9,0.5,0.5);
         Ks = vec3(0.8,0.8,0.8);
-        Ka = vec3(0.04,0.2,0.4);
+        Ka = vec3(0.5,0.5,0.5);
         q = 32.0;
 
-        float minx = bbox_min.x;
-        float maxx = bbox_max.x;
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        vec4 p2 = (position_model - bbox_center)/length(position_model - bbox_center);
 
-        float miny = bbox_min.y;
-        float maxy = bbox_max.y;
+        float theta = atan(p2.z, p2.x)+M_PI;
+        float phi = asin(p2.x);
 
-        float minz = bbox_min.z;
-        float maxz = bbox_max.z;
+        //V = (theta + M_PI)/(2 * M_PI);
+        //U = (phi + M_PI_2)/M_PI;
 
-        U = (position_model.y - miny)/(maxy - miny);
-        V = (position_model.x - minx)/(maxx - minx);
+        V = (position_model.y - bbox_min.y)/(bbox_max.y - bbox_min.y);
+        U = theta/(2*M_PI);
+
+        Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
     }
     else if ( object_id == CAPIVARA2)
     {
         color.rgb = cor_v;
-    } else if (object_id == HUD) {
+    }
+    else if (object_id == HUD) {
         //Cor linear que vai de (0,1,0) para (1,1,0) e depois para (1,0,0)
         if (tempo >= 0.5) {
             Ka = vec3(-2*tempo + 2,1.0,0);
@@ -353,22 +332,12 @@ void Jogo2() {
     {
         Kd = vec3(0.0,0.0,0.0);
         Ks = vec3(0.0,0.0,0.0);
-        Ka = vec3(1.0,1.0,1.0);
+        Ka = vec3(0.0,0.0,0.0);
         q = 1.0;
     }
 
     // Espectro da fonte de iluminação
-    vec3 I;
-
-    // Luz spotlight, se fora do angulo, fica sem luz
-    if (dot(vecL, -l) > cos(M_PI/12.0)) {
-        I = vec3(1.0,1.0,1.0); // PREENCH AQUI o espectro da fonte de luz
-    } else {
-        I = vec3(1.0, 1.0, 1.0);
-    }
-
-    // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+    vec3 I = vec3(1,1,1);
 
     // Espectro da luz ambiente
     vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
