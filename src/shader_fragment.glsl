@@ -45,6 +45,7 @@ uniform vec4 bbox_max;
 uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
+uniform sampler2D TextureImage3;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -88,10 +89,6 @@ void Jogo1() {
     vec4 vecL = normalize(vec4(0.0, -1.0, 0.0, 0.0));
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    //Tarefa 1
-    //vec4 l = normalize(vec4(1.0,1.0,0.5,0.0));
-    //Tarefa 2 parte 1
-    //vec4 l = normalize(camera_position - p);
     vec4 l = normalize(posL - p);
 
 
@@ -100,7 +97,7 @@ void Jogo1() {
     vec4 v = normalize(camera_position - p);
 
     // Vetor que define o sentido da reflexão especular ideal.
-    vec4 r = -l + 2 * n * (dot(n,l)); // PREENCHA AQUI o vetor de reflexão especular ideal
+    vec4 r = -l + 2 * n * (dot(n,l));
 
     // Parâmetros que definem as propriedades espectrais da superfície
     vec3 Kd; // Refletância difusa
@@ -126,8 +123,6 @@ void Jogo1() {
     }
     else if ( object_id == PLANE )
     {
-        // PREENCHA AQUI
-        // Propriedades espectrais do plano
         Kd = vec3(0.2,0.2,0.2);
         Ks = vec3(0.3,0.3,0.3);
         Ka = vec3(0.1,0.1,0.1);
@@ -177,22 +172,21 @@ void Jogo1() {
 
     // Luz spotlight, se fora do angulo, fica sem luz
     if (dot(vecL, -l) > cos(M_PI/12.0)) {
-        I = vec3(1.0,1.0,1.0); // PREENCH AQUI o espectro da fonte de luz
+        I = vec3(1.0,1.0,1.0);
     } else {
         I = vec3(0.0, 0.0, 0.0);
     }
 
     // Espectro da luz ambiente
-    vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
+    vec3 Ia = vec3(0.2,0.2,0.2);
 
     // Termo difuso utilizando a lei dos cossenos de Lambert
-    vec3 lambert_diffuse_term = Kd * I * max(0,dot(n,l)); // PREENCHA AQUI o termo difuso de Lambert
-
+    vec3 lambert_diffuse_term = Kd * I * max(0,dot(n,l));
     // Termo ambiente
-    vec3 ambient_term = Ka * Ia; // PREENCHA AQUI o termo ambiente
+    vec3 ambient_term = Ka * Ia;
 
     // Termo especular utilizando o modelo de iluminação de Phong
-    vec3 phong_specular_term  = Ks * I * pow(max(0,dot(r,v)),q); // PREENCH AQUI o termo especular de Phong
+    vec3 phong_specular_term  = Ks * I * pow(max(0,dot(r,v)),q);
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
@@ -237,15 +231,16 @@ void Jogo2() {
     vec4 n = normalize(normal);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(0,1,0,0));
-
+    vec4 l = normalize(vec4(1,1,1,0));
 
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
 
+    vec4 h = normalize(l+v);
+
     // Vetor que define o sentido da reflexão especular ideal.
-    vec4 r = -l + 2 * n * (dot(n,l)); // PREENCHA AQUI o vetor de reflexão especular ideal
+    vec4 r = -l + 2 * n * (dot(n,l));
 
     // Parâmetros que definem as propriedades espectrais da superfície
     vec3 Kd; // Refletância difusa
@@ -262,16 +257,25 @@ void Jogo2() {
 
     if ( object_id == SPHERE )
     {
-        // PREENCHA AQUI
         // Propriedades espectrais da esfera
-        Kd = vec3(0.8,0.4,0.08);
-        Ks = vec3(0.0,0.0,0.0);
-        Ka = vec3(0.4,0.2,0.04);
+        Kd = vec3(0.0,0.0,0.0);
+        Ks = vec3(0.8,0.8,0.8);
+        Ka = vec3(1.0,1.0,1.0);
         q = 1.0;
+
+        vec4 bbox_center = (bbox_min + bbox_max) / 2.0;
+        vec4 p2 = (position_model - bbox_center)/length(position_model - bbox_center);
+
+        float theta = atan(p2.x, p2.z);
+        float phi = asin(p2.y);
+
+        U = (theta + M_PI)/(2 * M_PI);
+        V = (phi + M_PI/2)/M_PI;
+
+        Kd0 = texture(TextureImage3, vec2(U,V)).rgb;
     }
     else if ( object_id == WALL )
     {
-        // PREENCHA AQUI
         // Propriedades espectrais do coelho
         Kd = vec3(0.8,0.8,0.8);
         Ks = vec3(0.3,0.3,0.3);
@@ -285,7 +289,6 @@ void Jogo2() {
     }
     else if ( object_id == PLANE )
     {
-        // PREENCHA AQUI
         // Propriedades espectrais do plano
         Kd = vec3(0.2,0.2,0.2);
         Ks = vec3(0.3,0.3,0.3);
@@ -344,16 +347,18 @@ void Jogo2() {
     vec3 I = vec3(1,1,1);
 
     // Espectro da luz ambiente
-    vec3 Ia = vec3(0.2,0.2,0.2); // PREENCHA AQUI o espectro da luz ambiente
+    vec3 Ia = vec3(0.2,0.2,0.2);
+    //vec3 Ia = vec3(1,1,1);
 
     // Termo difuso utilizando a lei dos cossenos de Lambert
-    vec3 lambert_diffuse_term = Kd * I * max(0,dot(n,l)); // PREENCHA AQUI o termo difuso de Lambert
+    vec3 lambert_diffuse_term = Kd * I * max(0,dot(n,l));
 
     // Termo ambiente
-    vec3 ambient_term = Ka * Ia; // PREENCHA AQUI o termo ambiente
+    vec3 ambient_term = Ka * Ia;
 
     // Termo especular utilizando o modelo de iluminação de Phong
-    vec3 phong_specular_term  = Ks * I * pow(max(0,dot(r,v)),q); // PREENCH AQUI o termo especular de Phong
+    //vec3 phong_specular_term  = Ks * I * pow(max(0,dot(r,v)),q);
+    vec3 blinn_phong_specular_term  = Ks * I * pow(max(0,dot(normal,h)),q);
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
@@ -372,7 +377,7 @@ void Jogo2() {
     // Cor final do fragmento calculada com uma combinação dos termos difuso,
     // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
     if (object_id != CAPIVARA2 && object_id != HUD)
-        color.rgb = Kd0 * (lambert_diffuse_term + ambient_term + phong_specular_term);
+        color.rgb = Kd0 * (lambert_diffuse_term + ambient_term + blinn_phong_specular_term);
 
 
     // Cor final com correção gamma, considerando monitor sRGB.
