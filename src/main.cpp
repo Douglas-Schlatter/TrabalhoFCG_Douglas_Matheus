@@ -99,6 +99,7 @@ struct VAR_ANGRY_CAP {
     float angulo1;
     float angulo2;
     float tempoDash;
+    bool calTrow;
 };
 
 struct VAR_DESVIE_CAP {
@@ -114,6 +115,7 @@ struct VAR_DESVIE_CAP {
     float angulo;
     float tempoDash;
 };
+
 
 // Estrutura que representa um modelo geomщtrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -229,7 +231,9 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis);
 void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c, float *tempoDash);
 float easing(float tempo);
 void DrawHUD(float tempo);
-void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis);
+//Angry Related
+void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis);
+void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_up_vector);
 //Game state related
 JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap,VAR_ANGRY_CAP *jogoAngryCap);
 
@@ -448,7 +452,7 @@ int main(int argc, char* argv[])
 
         if (jogoAtual == DESVIECAPIVARA) DesvieCapivara(window, &jogoDesvieCap);
         if (jogoAtual == CAPIVARAIMPOSTORA) CapivaraImpostora(window, &jogoCapImpostora);
-        if (jogoAtual == ANGRYCAP) AgryCap(window, &jogoAngryCap);
+        if (jogoAtual == ANGRYCAP) AngryCap(window, &jogoAngryCap);
     }
 
     // Finalizamos o uso dos recursos do sistema operacional
@@ -930,8 +934,12 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         // pela biblioteca GLFW.
         glfwPollEvents();
 }
+        glm::vec4 p1 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
+        glm::vec4 p2 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
+        glm::vec4 p3 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
+        glm::vec4 p4 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
 
-void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
+void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 // Aqui executamos as operaУЇУЕes de renderizaУЇУЃo
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor УЉ
@@ -1039,8 +1047,15 @@ void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
             variaveis->capPos.y = variaveis->capPrevPos.y + (variaveis->capNextPos.y - variaveis->capPrevPos.y) * easing(variaveis->tempoDash/MAXTEMPODASH);
         }
         */
+        glm::vec4 p1 = variaveis->camera_position_c;
+        glm::vec4 p2 = variaveis->camera_position_c;
+        glm::vec4 p3 = variaveis->camera_position_c;
+        glm::vec4 p4 = variaveis->camera_position_c;
+
         variaveis->capPrevPos = variaveis->capPos;
+
         if (keySPACE) {
+            if(variaveis-> calTrow){
             variaveis->capNextPos.x  = variaveis->capNextPos.x + (camera_view.x);
             variaveis->capNextPos.y  = variaveis->capNextPos.y + (camera_view.y);
             variaveis->capNextPos.z  = variaveis->capNextPos.z + (camera_view.z);
@@ -1051,12 +1066,33 @@ void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
             //variaveis->capPos.x = variaveis->capPrevPos.x + (variaveis->capNextPos.x - variaveis->capPrevPos.x) * easing(variaveis->tempoDash/MAXTEMPODASH);
             variaveis->capPos = variaveis->capPrevPos + (variaveis->capNextPos - variaveis->capPrevPos)*variaveis->capSpeed*delta_t;
 
+
             //variaveis->capPos.z = variaveis->capPrevPos.z + (variaveis->capNextPos.z - variaveis->capPrevPos.z)*1.0*delta_t;
             //variaveis->capPos.z = variaveis->capPrevPos.z + (variaveis->capNextPos.z - variaveis->capPrevPos.z) * easing(variaveis->tempoDash/MAXTEMPODASH);
+
+
+            model = Matrix_Translate(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z)
+            * Matrix_Rotate_X(-PI/2)
+            * Matrix_Rotate_Z(g_CameraTheta)
+            * Matrix_Rotate_X(-g_CameraPhi);
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, CAPIVARA);
+            DrawVirtualObject("object_0");
+            DrawVirtualObject("object_1");
+            //glUniform1i(g_object_id_uniform, 999);
+            DrawVirtualObject("object_2");
+            //glUniform1i(g_object_id_uniform, CAPIVARA);
+            DrawVirtualObject("object_3");
+            }
+            else
+            {
+                PontosCurva(&p1,&p2,&p3,&p4,&camera_view,&camera_up_vector);
+                variaveis-> calTrow = true; //TODO LEMBRAR QUE DEPOIS DE DEPOIS DE TERMINAR A ANIMAÇÃO, TEM QUE SETAR CALTROW PRA ZERO DNV
+            }
         }
         else
         {
-           variaveis->capPos =   variaveis->camera_position_c;
+           variaveis->capPos =  glm::vec3(variaveis->camera_position_c.x, (variaveis->camera_position_c.y) ,(variaveis->camera_position_c.z));
            //variaveis->capPrevPos = variaveis->capPos;
            variaveis->capNextPos = glm::vec3(variaveis->camera_position_c.x, variaveis->camera_position_c.y,variaveis->camera_position_c.z);
         }
@@ -1103,24 +1139,13 @@ void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 
 
 
-        model = Matrix_Translate(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z)
-        * Matrix_Rotate_X(-PI/2)
-        * Matrix_Rotate_Z(g_CameraTheta)
-        * Matrix_Rotate_X(-g_CameraPhi);
 
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, CAPIVARA);
-        DrawVirtualObject("object_0");
-        DrawVirtualObject("object_1");
-        //glUniform1i(g_object_id_uniform, 999);
-        DrawVirtualObject("object_2");
-        //glUniform1i(g_object_id_uniform, CAPIVARA);
-        DrawVirtualObject("object_3");
+
 
         #define TAMANHO_SALA_X 3
         #define TAMANHO_SALA_Y 3
 
-        // Desenhamos o modelo do chУЃo
+
         model = Matrix_Translate(0.0f, -1.0f, 0.0f)
               * Matrix_Scale(TAMANHO_SALA_X, 1, TAMANHO_SALA_Y);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -1173,7 +1198,23 @@ void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm
         *tempoDash = 0.0;
     }
 }
-
+void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_up) {
+    glm::vec4 tempCamV = *camera_view/norm(*camera_view);
+    glm::vec4 tempCamUp = *camera_up/norm(*camera_up);
+    for (int i = 0; i < 4; i++) {
+        *p2 = *p2+tempCamV;
+        *p2 = *p2+tempCamUp;
+    }
+    *p3 = *p2;
+    for (int i = 0; i < 2; i++) {
+        *p3 = *p3+tempCamV;
+    }
+    *p4 = *p1+(glm::vec4(8,8,8,1)*tempCamV);
+    PrintVector(*p1);
+    PrintVector(*p2);
+    PrintVector(*p3);
+    PrintVector(*p4);
+    }
 float easing(float tempo) {
     //easeOutExpo
     if (tempo == 1) {
@@ -1234,6 +1275,7 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         jogoAngryCap->prev_time = prev_time;
         g_CameraPhi = 0;
         g_CameraTheta = PI;
+        jogoAngryCap-> calTrow = false;
         return ANGRYCAP;
         break;
     default:
