@@ -73,7 +73,8 @@ typedef enum {
 typedef enum {
     AGUARDE = 0,
     EM_JOGO = 1,
-    ENTRE_JOGOS = 2
+    VITORIA = 6,
+    DERROTA = 7
 } ESTADO_JOGO;
 
 struct VAR_CAP_IMPOSTORA {
@@ -223,14 +224,15 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 //Individual game related
-void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis);
-void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis);
+void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis, ESTADO_JOGO *estado);
+void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis, ESTADO_JOGO *estado);
 void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c, float *tempoDash);
 float easing(float tempo);
 void DrawHUD(float tempo);
-void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis);
+void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis);
 //Game state related
 JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap,VAR_ANGRY_CAP *jogoAngryCap);
+void DrawResult(GLFWwindow *window, ESTADO_JOGO *result);
 
 
 // Definimos uma estrutura que armazenarс dados necessсrios para renderizar
@@ -279,6 +281,10 @@ bool keySPACE = false;
 
 
 JOGO jogoAtual = NONE;
+float tempoJogo = 0;
+
+#define TEMPOCAPIMP 10
+#define TEMPODESVIECAP 30
 
 // Variсveis que definem a cтmera em coordenadas esfщricas, controladas pelo
 // usuсrio atravщs do mouse (veja funчуo CursorPosCallback()). A posiчуo
@@ -443,11 +449,14 @@ int main(int argc, char* argv[])
     // Ficamos em um loop infinito, renderizando, atщ que o usuсrio feche a janela
     while (!glfwWindowShouldClose(window))
     {
-        if (jogoAtual == NONE) jogoAtual = TrocaDeJogo(&estadoAtual, &jogoCapImpostora, &jogoDesvieCap, &jogoAngryCap);
 
-        if (jogoAtual == DESVIECAPIVARA) DesvieCapivara(window, &jogoDesvieCap);
-        if (jogoAtual == CAPIVARAIMPOSTORA) CapivaraImpostora(window, &jogoCapImpostora);
-        if (jogoAtual == ANGRYCAP) AgryCap(window, &jogoAngryCap);
+        if ((estadoAtual == VITORIA || estadoAtual == DERROTA)) {
+            DrawResult(window, &estadoAtual);
+        }
+        if (jogoAtual == NONE) jogoAtual = TrocaDeJogo(&estadoAtual, &jogoCapImpostora, &jogoDesvieCap, &jogoAngryCap);
+        if (jogoAtual == DESVIECAPIVARA) DesvieCapivara(window, &jogoDesvieCap, &estadoAtual);
+        if (jogoAtual == CAPIVARAIMPOSTORA) CapivaraImpostora(window, &jogoCapImpostora, &estadoAtual);
+        if (jogoAtual == ANGRYCAP) AngryCap(window, &jogoAngryCap);
     }
 
     // Finalizamos o uso dos recursos do sistema operacional
@@ -457,7 +466,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis) {
+void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis, ESTADO_JOGO *estado) {
 // Aqui executamos as operaчѕes de renderizaчуo
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor щ
@@ -542,6 +551,10 @@ void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis) {
         //luz_x = cos(luz);
         //luz_y = sin(luz);
 
+        tempoJogo -= delta_t;
+        if (tempoJogo <= 0)
+            *estado = DERROTA;
+
         if (keyW) variaveis->luz_pos.y += variaveis->speed * delta_t;
         if (keyA) variaveis->luz_pos.x += variaveis->speed * delta_t;
         if (keyS) variaveis->luz_pos.y -= variaveis->speed * delta_t;
@@ -555,10 +568,16 @@ void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis) {
         #define CAPIVARA 3
         #define CAPIVARA2 4
 
+        std::vector <glm::vec4> posCap = {glm::vec4(0,0,0,0),
+                            glm::vec4(0,0,0,0),
+                            glm::vec4(0,0,0,0),
+                            glm::vec4(0,0,0,0)};
+
         for (int i = 0; i < 4; i++) {
             model = Matrix_Translate(cos(PI/2 * i+ variaveis->countCapPos),-0.6f,sin(PI/2 * i+ variaveis->countCapPos))
                   * Matrix_Rotate_X(-PI/2)
                   * Matrix_Rotate_Z(-PI/2*i + 3*PI/2 - variaveis->countCapPos);
+            posCap[i] = glm::vec4(cos(PI/2 * i + variaveis->countCapPos), -0.6f, sin(PI/2 * i + variaveis->countCapPos), 0);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             if (variaveis->rng == i) {
                 glUniform1i(g_object_id_uniform, CAPIVARA2);
@@ -579,6 +598,20 @@ void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis) {
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
+
+        if (keySPACE) {
+            for (int i = 0; i < 4; i++) {
+                if (EsferaEsfera(glm::vec4(variaveis->luz_pos.x, -0.6f, variaveis->luz_pos.y, 0), 0.1, posCap[i], 0.5)) {
+                    if (i == variaveis->rng) {
+                        *estado = VITORIA;
+                    } else {
+                        *estado = DERROTA;
+                    }
+                }
+            }
+        }
+
+        DrawHUD(tempoJogo/TEMPOCAPIMP);
 
         // Imprimimos na tela os тngulos de Euler que controlam a rotaчуo do
         // terceiro cubo.
@@ -606,7 +639,7 @@ void CapivaraImpostora(GLFWwindow *window, VAR_CAP_IMPOSTORA *variaveis) {
         glfwPollEvents();
 }
 
-void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
+void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis, ESTADO_JOGO *estado) {
 // Aqui executamos as operaчѕes de renderizaчуo
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor щ
@@ -696,6 +729,9 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         variaveis->prev_time = cur_time;
         variaveis->tempoEstado -= 1 * delta_t;
 
+        tempoJogo -= delta_t;
+        if (tempoJogo <= 0)
+            *estado = VITORIA;
 
         if (keyW) variaveis->camera_position_c += -w * variaveis->speed * delta_t;
         if (keyA) variaveis->camera_position_c += -u * variaveis->speed * delta_t;
@@ -809,7 +845,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         //capivara -> parede +X -> parede -X -> parede +Z -> parede -Z
         PushMatrix(model);
 
-        //DrawHUD(variaveis->tempoEstado/3);
+        DrawHUD(tempoJogo/TEMPODESVIECAP);
 
 
         //capivara -> parede +X -> parede -X -> parede +Z -> { parede -Z }
@@ -850,36 +886,37 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
 
         // Hitbox do jogador
         glm::vec4 maxHitbox = variaveis->camera_position_c + glm::vec4(0.2,10,0.2,0);
-        glm::vec4 minHitbox = variaveis->camera_position_c + glm::vec4(-0.2,-1,-0.2,0);
+        glm::vec4 minHitbox = variaveis->camera_position_c + glm::vec4(-0.2,-10,-0.2,0);
 
 
         // Se a capivara encostar no jogador, ele perde
-        if (CuboCubo(minHitbox, maxHitbox, bbox_cap_min, bbox_cap_max))
-            printf("a");
+        if (CuboCubo(minHitbox, maxHitbox, bbox_cap_min, bbox_cap_max)) {
+            *estado = DERROTA;
+        }
 
         // Se a capivara estiver fora das paredes, ela para
-        if (cuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(TAMANHO_SALA_X,0,0,1), normParedeX)) {
+        if (CuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(TAMANHO_SALA_X,0,0,1), normParedeX)) {
             variaveis->estado = ESPERA;
             variaveis->tempoDash = 0;
             variaveis->tempoEstado = 3.0;
             variaveis->capPos.x += normParedeX.x * 0.3;
             variaveis->capPos.y += normParedeX.z * 0.3;
         }
-        if (cuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(-TAMANHO_SALA_X,0,0,1), normParedeMX)) {
+        if (CuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(-TAMANHO_SALA_X,0,0,1), normParedeMX)) {
             variaveis->estado = ESPERA;
             variaveis->tempoDash = 0;
             variaveis->tempoEstado = 3.0;
             variaveis->capPos.x += normParedeMX.x * 0.3;
             variaveis->capPos.y += normParedeMX.z * 0.3;
         }
-        if (cuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(0,0,TAMANHO_SALA_Y,1), normParedeZ)) {
+        if (CuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(0,0,TAMANHO_SALA_Y,1), normParedeZ)) {
             variaveis->estado = ESPERA;
             variaveis->tempoDash = 0;
             variaveis->tempoEstado = 3.0;
             variaveis->capPos.x += normParedeZ.x * 0.3;
             variaveis->capPos.y += normParedeZ.z * 0.3;
         }
-        if (cuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(0,0,-TAMANHO_SALA_Y,1), normParedeMZ)) {
+        if (CuboPlano(bbox_cap_min, bbox_cap_max, glm::vec4(0,0,-TAMANHO_SALA_Y,1), normParedeMZ)) {
             variaveis->estado = ESPERA;
             variaveis->tempoDash = 0;
             variaveis->tempoEstado = 3.0;
@@ -888,16 +925,16 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         }
 
         // Se jogador encostar na parede, ele para
-        if (cuboPlano(minHitbox, maxHitbox, glm::vec4(TAMANHO_SALA_X,0,0,1), normParedeX)) {
+        if (CuboPlano(minHitbox, maxHitbox, glm::vec4(TAMANHO_SALA_X,0,0,1), normParedeX)) {
             variaveis->camera_position_c += normParedeX * glm::vec4(0.1, 0.1, 0.1, 0);
         }
-        if (cuboPlano(minHitbox, maxHitbox, glm::vec4(-TAMANHO_SALA_X,0,0,1), normParedeMX)) {
+        if (CuboPlano(minHitbox, maxHitbox, glm::vec4(-TAMANHO_SALA_X,0,0,1), normParedeMX)) {
             variaveis->camera_position_c += normParedeMX * glm::vec4(0.1, 0.1, 0.1, 0);
         }
-        if (cuboPlano(minHitbox, maxHitbox, glm::vec4(0,0,TAMANHO_SALA_Y,1), normParedeZ)) {
+        if (CuboPlano(minHitbox, maxHitbox, glm::vec4(0,0,TAMANHO_SALA_Y,1), normParedeZ)) {
             variaveis->camera_position_c += normParedeZ * glm::vec4(0.1, 0.1, 0.1, 0);
         }
-        if (cuboPlano(minHitbox, maxHitbox, glm::vec4(0,0,-TAMANHO_SALA_Y,1), normParedeMZ)) {
+        if (CuboPlano(minHitbox, maxHitbox, glm::vec4(0,0,-TAMANHO_SALA_Y,1), normParedeMZ)) {
             variaveis->camera_position_c += normParedeMZ * glm::vec4(0.1, 0.1, 0.1, 0);
         }
 
@@ -906,7 +943,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         TextRendering_ShowEstado(window, variaveis->estado, variaveis->tempoEstado);
         TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
         //TextRendering_ShowCapAngulo(window, variaveis->capView, variaveis->angulo);
-        TextRendering_ShowCollision(window, minHitbox, glm::vec4(variaveis->capPos.x,-0.6,variaveis->capPos.y,1), bbox_cap_min, bbox_cap_max);
+        TextRendering_ShowCollision(window, bbox_cap_min, bbox_cap_max, minHitbox, maxHitbox);
 
         // Imprimimos na informaчуo sobre a matriz de projeчуo sendo utilizada.
         TextRendering_ShowProjection(window);
@@ -930,7 +967,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis) {
         glfwPollEvents();
 }
 
-void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
+void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 // Aqui executamos as operaУЇУЕes de renderizaУЇУЃo
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor УЉ
@@ -1181,9 +1218,9 @@ float easing(float tempo) {
 }
 
 JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap, VAR_ANGRY_CAP  *jogoAngryCap) {
-    *estado = ENTRE_JOGOS;
-    //int rng = rand() % NUM_JOGOS + 1; // para aleatorio deixe essa linha
-    int rng = ANGRYCAP; // para deixar o jogo sempre o mesmo
+    *estado = EM_JOGO;
+    int rng = rand() % NUM_JOGOS + 1; // para aleatorio deixe essa linha
+    //int rng = ANGRYCAP; // para deixar o jogo sempre o mesmo
     float prev_time = (float) glfwGetTime();
 
     switch (rng) {
@@ -1194,6 +1231,7 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         jogoCapImpostora->speed = 2.0f;
         jogoCapImpostora->speedCount = 1.0f;
         jogoCapImpostora->rng = rand() % 4;
+        tempoJogo = TEMPOCAPIMP;
         return CAPIVARAIMPOSTORA;
         break;
 
@@ -1212,6 +1250,7 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         jogoDesvieCap->prev_time = prev_time;
         g_CameraPhi = 0;
         g_CameraTheta = PI;
+        tempoJogo = TEMPODESVIECAP;
         return DESVIECAPIVARA;
         break;
     case ANGRYCAP:
@@ -1238,11 +1277,22 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
 
 }
 
+void DrawResult(GLFWwindow *window, ESTADO_JOGO *result) {
+    if (*result == VITORIA) {
+        printf("Ganhou!\n\n");
+    }
+    if (*result == DERROTA) {
+        printf("Perdeu :(\n\n");
+    }
+    *result = AGUARDE;
+    jogoAtual = NONE;
+}
+
 void DrawHUD(float tempo) {
     glm::mat4 model;
 
     model = Matrix_Translate(0,0.9,0)
-          * Matrix_Scale(tempo,0.1,1);
+          * Matrix_Scale(tempo,0.05,1);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -2192,8 +2242,8 @@ void TextRendering_ShowCollision(GLFWwindow* window, glm::vec4 minx, glm::vec4 m
     float pad = TextRendering_LineHeight(window);
 
     char buffer[160];
-    snprintf(buffer, 160, "BBOX: (%.5f, %.5f, %.5f) bbox: (%.5f, %.5f, %.5f) BBOX2: (%.2f, %.2f, %.2f) bbox2: (%.2f, %.2f, %.2f) ", bboxmax.x, bboxmax.y, bboxmax.z, bboxmin.x, bboxmin.y, bboxmin.z,
-                                                                                                                                    maxx.x, maxx.y, maxx.z, minx.x, minx.y, minx.z);
+    snprintf(buffer, 160, "bbox: (%.5f, %.5f, %.5f) BBOX: (%.5f, %.5f, %.5f) bbox2: (%.2f, %.2f, %.2f) BBOX2: (%.2f, %.2f, %.2f) ", minx.x, minx.y, minx.z, maxx.x, maxx.y, maxx.z,
+                                                                                                                                    bboxmin.x, bboxmin.y, bboxmin.z, bboxmax.x, bboxmax.y, bboxmax.z);
 
     TextRendering_PrintString(window, buffer, -1.0f+pad/5, -1.0f+pad*5, 1.0f);
 }

@@ -36,6 +36,8 @@ uniform sampler2D TextureImage1;
 
 #define CAPIVARA2 4
 #define HUD 5
+#define VITORIA 6
+#define DERROTA 7
 
 void main()
 {
@@ -51,7 +53,7 @@ void main()
     // deste Vertex Shader, a placa de vídeo (GPU) fará a divisão por W. Veja
     // slides 41-67 e 69-86 do documento Aula_09_Projecoes.pdf.
 
-    if (object_id == HUD) {
+    if (object_id == HUD || object_id == VITORIA || object_id == DERROTA) {
         gl_Position = model * model_coefficients;
         //gl_Position = projection * view * model * model_coefficients;
     }

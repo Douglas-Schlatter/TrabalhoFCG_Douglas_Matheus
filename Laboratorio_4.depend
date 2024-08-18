@@ -1882,7 +1882,7 @@
 	<inttypes.h>
 	<stdint.h>
 
-1723870428 source:c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\src\main.cpp
+1724023117 source:c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\src\main.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -1904,6 +1904,7 @@
 	<stb_image.h>
 	"utils.h"
 	"matrices.h"
+	"collisions.h"
 
 1723069984 c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\include\glfw\glfw3.h
 	<stddef.h>
@@ -2764,7 +2765,7 @@
 1723069985 c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\include\utils.h
 	<cstdio>
 
-1723069985 c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\include\matrices.h
+1723975230 c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\include\matrices.h
 	<cstdio>
 	<cstdlib>
 	<glm/mat4x4.hpp>
@@ -3763,6 +3764,19 @@
 1724002770 d:\users\t-gamer\desktop\faculdade\ufrgs_7_sem\comp_grafica\trabfinal\trabalhofcg_douglas_matheus\include\collisions.h
 
 1724002770 source:d:\users\t-gamer\desktop\faculdade\ufrgs_7_sem\comp_grafica\trabfinal\trabalhofcg_douglas_matheus\src\matrices.cpp
+	<cstdio>
+	<cstdlib>
+	<glm/mat4x4.hpp>
+	<glm/vec4.hpp>
+	<glm/gtc/matrix_transform.hpp>
+
+1724022369 c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\include\collisions.h
+
+1724022620 source:c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\src\collisions.cpp
+	<glm/vec4.hpp>
+	"matrices.h"
+
+1723975080 source:c:\users\user\desktop\ufrgd\fcg\final\laboratorio_4_codigo_fonte\trabalhofcg_douglas_matheus\src\matrices.cpp
 	<cstdio>
 	<cstdlib>
 	<glm/mat4x4.hpp>
