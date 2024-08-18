@@ -96,7 +96,8 @@ struct VAR_ANGRY_CAP {
     glm::vec3 capPrevPos;
     glm::vec3 capNextPos;
     glm::vec4 capView;
-    float angulo;
+    float angulo1;
+    float angulo2;
     float tempoDash;
 };
 
@@ -1093,8 +1094,9 @@ void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
             capViewNew = capViewNew/norm(capViewNew);
 
             //https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
-            variaveis->angulo += std::atan2(dotproduct(crossproduct(variaveis->capView, capViewNew), glm::vec4(0,1,0,0)), dotproduct(variaveis->capView, capViewNew));
-
+            variaveis->angulo1 += std::atan2(dotproduct(crossproduct(variaveis->capView, capViewNew), glm::vec4(0,1,0,0)), dotproduct(variaveis->capView, capViewNew));
+           // variaveis->angulo1 +=  dotproduct(variaveis->capView, capViewNew);
+            //variaveis->angulo2 += std::atan2(dotproduct(crossproduct(variaveis->capView, capViewNew), glm::vec4(1,0,0,0)), dotproduct(variaveis->capView, capViewNew));
             variaveis->capView = capViewNew;
 
 
@@ -1103,7 +1105,8 @@ void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 
         model = Matrix_Translate(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z)
         * Matrix_Rotate_X(-PI/2)
-        * Matrix_Rotate_Z(variaveis->angulo);
+        * Matrix_Rotate_Z(g_CameraTheta)
+        * Matrix_Rotate_X(-g_CameraPhi);
 
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, CAPIVARA);
@@ -1131,7 +1134,7 @@ void AgryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
         TextRendering_ShowEstado(window, variaveis->estado, variaveis->tempoEstado);
         TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
         //TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
-        TextRendering_ShowCapAngulo(window, variaveis->capView, variaveis->angulo);
+        TextRendering_ShowCapAngulo(window, variaveis->capView, variaveis->angulo1);
 
         // Imprimimos na informaУЇУЃo sobre a matriz de projeУЇУЃo sendo utilizada.
         TextRendering_ShowProjection(window);
@@ -1223,7 +1226,8 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         jogoAngryCap->capPrevPos = glm::vec3(0, 0,0);
         jogoAngryCap->capView = glm::vec4(0.0, 0.0, 1.0, 0.0);
         jogoAngryCap->capView = jogoAngryCap->capView/norm(jogoAngryCap->capView);
-        jogoAngryCap->angulo = 0;
+        jogoAngryCap->angulo1 = 0;
+        jogoAngryCap->angulo2 = 0;
         jogoAngryCap->tempoDash = 0.0f;
         jogoAngryCap->speed = 2.0f;
         jogoAngryCap->capSpeed = 0.01f;
