@@ -1,7 +1,26 @@
 #include <glm/vec4.hpp>
 #include "matrices.h"
 
-int cuboPlano(glm::vec4 minCubo, glm::vec4 maxCubo, glm::vec4 pontoPlano, glm::vec4 normalPlano) {
+void CheckBounds(glm::vec4 *minv, glm::vec4 *maxv) {
+    float aux;
+    if (minv->x > maxv->x) {
+        aux = minv->x;
+        minv->x = maxv->x;
+        maxv->x = aux;
+    }
+    if (minv->y > maxv->y) {
+        aux = minv->y;
+        minv->y = maxv->y;
+        maxv->y = aux;
+    }
+    if (minv->z > maxv->z) {
+        aux = minv->z;
+        minv->z = maxv->z;
+        maxv->z = aux;
+    }
+}
+
+int CuboPlano(glm::vec4 minCubo, glm::vec4 maxCubo, glm::vec4 pontoPlano, glm::vec4 normalPlano) {
 
     glm::vec4 a = glm::vec4(0,0,0,1);
     glm::vec4 b = glm::vec4(0,0,0,1);
@@ -95,9 +114,21 @@ int cuboPlano(glm::vec4 minCubo, glm::vec4 maxCubo, glm::vec4 pontoPlano, glm::v
 }
 
 bool CuboCubo(glm::vec4 min1, glm::vec4 max1, glm::vec4 min2, glm::vec4 max2) {
+    CheckBounds(&min1, &max1);
+    CheckBounds(&min2, &max2);
+
     if ((min1.x <= max2.x) && (max1.x >= min2.x))
         if ((min1.y <= max2.y) && (max1.y >= min2.y))
             if ((min1.z <= max2.z) && (max1.z >= min2.z))
                 return true;
     return false;
+}
+
+bool EsferaEsfera(glm::vec4 centro1, float raio1, glm::vec4 centro2, float raio2) {
+    if (norm(centro1 - centro2) <= (raio1 + raio2)) {
+        return true;
+    } else {
+        return false;
+    }
+
 }

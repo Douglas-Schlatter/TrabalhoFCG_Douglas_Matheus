@@ -29,6 +29,8 @@ uniform int game_ID;
 #define CAPIVARA  3
 #define CAPIVARA2  4
 #define HUD  5
+#define VITORIA 6
+#define DERROTA 7
 #define M_PI 3.141592
 
 #define CAPIVARAIMPOSTORA 1
@@ -56,6 +58,12 @@ void Jogo3();
 
 void main()
 {
+    if (object_id == VITORIA) {
+        color = vec4(0,1,0,1);
+    }
+    if (object_id == DERROTA) {
+        color = vec4(1,0,0,1);
+    }
     if (game_ID == CAPIVARAIMPOSTORA) {
         Jogo1();
     } else if (game_ID == DESVIECAPIVARA) {
@@ -159,6 +167,15 @@ void Jogo1() {
     {
         color.rgb = cor_v;
     }
+    else if (object_id == HUD) {
+        //Cor linear que vai de (0,1,0) para (1,1,0) e depois para (1,0,0)
+        if (tempo >= 0.5) {
+            Ka = vec3(-2*tempo + 2,1.0,0);
+        } else {
+            Ka = vec3(1,2*tempo,0);
+        }
+        color.rgb = Ka;
+    }
     else // Objeto desconhecido = preto
     {
         Kd = vec3(0.0,0.0,0.0);
@@ -204,7 +221,7 @@ void Jogo1() {
 
     // Cor final do fragmento calculada com uma combinação dos termos difuso,
     // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
-    if (object_id != CAPIVARA2 )
+    if (object_id != CAPIVARA2 && object_id != HUD )
         color.rgb = Kd0 * (lambert_diffuse_term + ambient_term + phong_specular_term);
 
 
