@@ -234,6 +234,8 @@ void DrawHUD(float tempo);
 //Angry Related
 void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis);
 void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_up_vector);
+glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float *delta_t);
+glm::vec4  MulVetPont(float valor,glm::vec4 vet);
 //Game state related
 JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap,VAR_ANGRY_CAP *jogoAngryCap);
 
@@ -1087,6 +1089,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
             else
             {
                 PontosCurva(&p1,&p2,&p3,&p4,&camera_view,&camera_up_vector);
+                glm::vec4 teste = CalcBezie(&p1,&p2,&p3,&p4,0);
                 variaveis-> calTrow = true; //TODO LEMBRAR QUE DEPOIS DE DEPOIS DE TERMINAR A ANIMAÇÃO, TEM QUE SETAR CALTROW PRA ZERO DNV
             }
         }
@@ -1182,6 +1185,10 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
         // pela biblioteca GLFW.
         glfwPollEvents();
 }
+glm::vec4  MulVetPont(float valor,glm::vec4 vet)
+{
+    return (glm::vec4(valor,valor,valor,1)*(vet));
+}
 
 void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c, float *tempoDash) {
     if (*estado == ESPERA) {
@@ -1214,6 +1221,17 @@ void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::ve
     PrintVector(*p2);
     PrintVector(*p3);
     PrintVector(*p4);
+    }
+glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float *delta_t) {
+    glm::vec4 target = glm::vec4(0,0,0,0);
+    float b03 = pow((1-(*delta_t)),3);
+    float b13 = 3*(*delta_t)*pow((1-(*delta_t)),2);
+    float b23 = 3*(pow((*delta_t),2))*(1-(*delta_t));
+    float b33= pow(*delta_t,3);
+
+    target = MulVetPont(b03,(*p1))+MulVetPont(b13,(*p2))+MulVetPont(b23,(*p3))+MulVetPont(b33,(*p4));
+    PrintVector(target);
+    return target;
     }
 float easing(float tempo) {
     //easeOutExpo
