@@ -107,6 +107,8 @@ struct VAR_ANGRY_CAP {
     float angulo2;
     float tempoDash;
     bool calTrow;
+    bool reachF ;
+    bool trow ;
 };
 
 struct VAR_DESVIE_CAP {
@@ -214,6 +216,7 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M,
 
 void TextRendering_ShowEstado(GLFWwindow* window, ESTADO_CAPIVARA estado, float tempo);
 void TextRendering_ShowCapPos(GLFWwindow* window, glm::vec2 capPos, glm::vec2 capPrevPos, glm::vec2 capNextPos);
+void TextRendering_ShowCapPos2(GLFWwindow* window, glm::vec3 capPos, glm::vec3 capPrevPos, glm::vec3 capNextPos);
 void TextRendering_ShowCapAngulo(GLFWwindow* window, glm::vec4 capView, float angulo);
 void TextRendering_ShowCollision(GLFWwindow* window, glm::vec4 minx, glm::vec4 maxx, glm::vec4 bboxmin, glm::vec4 bboxmax);
 
@@ -298,7 +301,7 @@ float tempoJogo = 0;
 
 #define TEMPOCAPIMP 10
 #define TEMPODESVIECAP 30
-#define TEMPOANGRYCAP 60
+#define TEMPOANGRYCAP 30
 
 // Variѝveis que definem a cтmera em coordenadas esfщricas, controladas pelo
 // usuѝrio atravщs do mouse (veja funчуo CursorPosCallback()). A posiчуo
@@ -983,6 +986,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis, ESTADO_JOGO *
 }
 
         glm::vec4 target;
+
 void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) {
 // Aqui executamos as operaУЇУЕes de renderizaУЇУЃo
 
@@ -1074,7 +1078,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         variaveis->prev_time = cur_time;
         variaveis->tempoEstado -= 1 * delta_t;
 
-        tempoJogo -= delta_t;
+        //tempoJogo -= delta_t; //Para o tempo passar
         if (tempoJogo <= 0)
             *estado = DERROTA;
 
@@ -1104,9 +1108,12 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         float maxTempTrow = 3.0f;
         glm::vec4 bbox_cap_min = glm::vec4(0, 0, 0, 1);
         glm::vec4 bbox_cap_max  = glm::vec4(0, 0, 0, 1);
-        if (keySPACE) {
-            if(variaveis-> calTrow){
 
+
+        if(variaveis->trow)
+        {
+            if(variaveis-> calTrow && !variaveis->reachF)
+            {
             variaveis->tempoDash = std::min(variaveis->tempoDash + delta_t, (float)maxTempTrow);
             //printf("%f",variaveis->tempoDash);
             //float um = 1.0f;
@@ -1142,33 +1149,47 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
 
               bbox_cap_min = model * glm::vec4(-0.18, -0.67, -0.41, 1);
               bbox_cap_max = model * glm::vec4(0.18, 0.48, 0.31, 1);
-            }
+
+              //if(variaveis->p4 == glm::vec4(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z,1.0f))
+              if((variaveis->capPos.x > (variaveis->p4.x)-0.1)&& (variaveis->capPos.x <= (variaveis->p4.x)+0.1))
+              {
+                  printf("Chegou no final");
+                  variaveis->tempoDash  = 0.0f;
+                  variaveis->trow = false;
+                  variaveis-> calTrow = true;
+                  variaveis->reachF = true;
+                  variaveis-> calTrow = false;
+              }
+             }
             else
             {
 
-            PontosCurva(&variaveis->p1,&variaveis->p2,&variaveis->p3,&variaveis->p4,&camera_view,&v);
-
-            model = Matrix_Translate(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z)
-            * Matrix_Rotate_X(-PI/2)
-            * Matrix_Rotate_Z(g_CameraTheta)
-            * Matrix_Rotate_X(-g_CameraPhi);
-             variaveis->oldPhiAngle = g_CameraPhi;
-             variaveis->oldThetaAngle = g_CameraTheta;
-                variaveis-> calTrow = true; //TODO LEMBRAR QUE DEPOIS DE DEPOIS DE TERMINAR A ANIMAÇÃO, TEM QUE SETAR CALTROW PRA ZERO DNV
+                PontosCurva(&variaveis->p1,&variaveis->p2,&variaveis->p3,&variaveis->p4,&camera_view,&v);
+                variaveis->capPos = variaveis->camera_position_c;
+                model = Matrix_Translate(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z)
+                * Matrix_Rotate_X(-PI/2)
+                * Matrix_Rotate_Z(g_CameraTheta)
+                * Matrix_Rotate_X(-g_CameraPhi);
+                 variaveis->oldPhiAngle = g_CameraPhi;
+                 variaveis->oldThetaAngle = g_CameraTheta;
+                 variaveis-> calTrow = true; //TODO LEMBRAR QUE DEPOIS DE DEPOIS DE TERMINAR A ANIMAÇÃO, TEM QUE SETAR CALTROW PRA ZERO DNV
+                 variaveis->reachF = false;
             }
         }
-        else
-        {
-           variaveis->capPos =  glm::vec3(variaveis->camera_position_c.x, (variaveis->camera_position_c.y) ,(variaveis->camera_position_c.z));
-           //variaveis->capPrevPos = variaveis->capPos;
-           variaveis->capNextPos = glm::vec3(variaveis->camera_position_c.x, variaveis->camera_position_c.y,variaveis->camera_position_c.z);
+
+        if (keySPACE) {
+
+          variaveis-> trow = true;
+          variaveis->reachF = false;
         }
+
 
         #define SPHERE 0
         #define WALL  1
         #define PLANE  2
         #define CAPIVARA 3
         #define CAPIVARA2 4
+        #define TARGET 8
         #define HUD 5
         /* OLD ANGLE CODE
         if (variaveis->estado == ATENCAO) {
@@ -1222,34 +1243,75 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
 
 
 
-        model = Matrix_Translate(0.0f, 3.0f, 8.0f)
+        model = Matrix_Translate(-2.0f, 3.0f, 8.0f)
               * Matrix_Scale(1,1,1)
               * Matrix_Rotate_X(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, 8);
+        glUniform1i(g_object_id_uniform, TARGET);
         DrawVirtualObject("the_plane");
 
+         // Hitbox do jogador
+        glm::vec4 maxHitboxT1 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
+        glm::vec4 minHitboxT1 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
 
+        model = Matrix_Translate(2.0f, 2.0f, 7.0f)
+              * Matrix_Scale(1,1,1)
+              * Matrix_Rotate_X(-PI/2);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TARGET);
+        DrawVirtualObject("the_plane");
 
         // Hitbox do jogador
-        glm::vec4 maxHitbox = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
-        glm::vec4 minHitbox = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
+        glm::vec4 maxHitboxT2 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
+        glm::vec4 minHitboxT2 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
+
+        model = Matrix_Translate(2.0f, 2.0f, -7.0f)
+              * Matrix_Scale(1,1,1)
+              * Matrix_Rotate_X(PI/2);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TARGET);
+        DrawVirtualObject("the_plane");
+
+        // Hitbox do jogador
+        glm::vec4 maxHitboxT3 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
+        glm::vec4 minHitboxT3 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
+
+        model = Matrix_Translate(-2.0f, 3.0f, -8.0f)
+        * Matrix_Scale(1,1,1)
+        * Matrix_Rotate_X(PI/2);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TARGET);
+        DrawVirtualObject("the_plane");
+
+        // Hitbox do jogador
+        glm::vec4 maxHitboxT4 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
+        glm::vec4 minHitboxT4 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
 
 
-        // Se a capivara encostar no alvo desative o alvo
-        if (CuboCubo(minHitbox, maxHitbox, bbox_cap_min, bbox_cap_max)) {
-            //printf("tocou");
+
+                // Se a capivara encostar no alvo desative o alvo
+        if (CuboCubo(minHitboxT1, maxHitboxT1, bbox_cap_min, bbox_cap_max)) {
+            *estado = VITORIA;
+        }
+        if (CuboCubo(minHitboxT2, maxHitboxT2, bbox_cap_min, bbox_cap_max)) {
+            *estado = VITORIA;
+        }
+        if (CuboCubo(minHitboxT3, maxHitboxT3, bbox_cap_min, bbox_cap_max)) {
+            *estado = VITORIA;
+        }
+        if (CuboCubo(minHitboxT4, maxHitboxT4, bbox_cap_min, bbox_cap_max)) {
             *estado = VITORIA;
         }
 
 
 
-        DrawHUD(tempoJogo/60);
+
+        DrawHUD(tempoJogo/30);
 
         // Imprimimos na tela os УЂngulos de Euler que controlam a rotaУЇУЃo do
         // terceiro cubo.
         TextRendering_ShowEstado(window, variaveis->estado, tempoJogo);
-        TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
+        TextRendering_ShowCapPos2(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
         //TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
         TextRendering_ShowCapAngulo(window, variaveis->capView, variaveis->angulo1);
 
@@ -1338,8 +1400,8 @@ float easing(float tempo) {
 
 JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap, VAR_ANGRY_CAP  *jogoAngryCap) {
     *estado = EM_JOGO;
-    //int rng = rand() % NUM_JOGOS + 1; // para aleatorio deixe essa linha
-    int rng = ANGRYCAP; // para deixar o jogo sempre o mesmo
+    int rng = rand() % NUM_JOGOS + 1; // para aleatorio deixe essa linha
+    //int rng = ANGRYCAP; // para deixar o jogo sempre o mesmo
     float prev_time = (float) glfwGetTime();
 
     switch (rng) {
@@ -1397,6 +1459,8 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         g_CameraTheta = PI;
         jogoAngryCap-> calTrow = false;
         tempoJogo = TEMPOANGRYCAP;
+        jogoAngryCap-> reachF = false;
+        jogoAngryCap-> trow = false;
         return ANGRYCAP;
         break;
     default:
@@ -2346,6 +2410,19 @@ void TextRendering_ShowCapPos(GLFWwindow* window, glm::vec2 capPos, glm::vec2 ca
 
     char buffer[80];
     snprintf(buffer, 80, "pos = (%.2f, %.2f) prev = (%.2f, %.2f) next = (%.2f, %.2f)\n", capPos.x, capPos.y, capPrevPos.x, capPrevPos.y, capNextPos.x, capNextPos.y);
+
+    TextRendering_PrintString(window, buffer, -1.0f+pad/5, -1.0f+pad, 1.0f);
+}
+
+void TextRendering_ShowCapPos2(GLFWwindow* window, glm::vec3 capPos, glm::vec3 capPrevPos, glm::vec3 capNextPos)
+{
+    if ( !g_ShowInfoText )
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[80];
+    snprintf(buffer, 80, "pos = (%.2f, %.2f,%.2f) prev = (%.2f, %.2f) next = (%.2f, %.2f)\n", capPos.x, capPos.y,capPos.z, capPrevPos.x, capPrevPos.y, capNextPos.x, capNextPos.y);
 
     TextRendering_PrintString(window, buffer, -1.0f+pad/5, -1.0f+pad, 1.0f);
 }
