@@ -97,6 +97,12 @@ struct VAR_ANGRY_CAP {
     glm::vec3 capPrevPos;
     glm::vec3 capNextPos;
     glm::vec4 capView;
+    glm::vec4 p1;
+    glm::vec4 p2;
+    glm::vec4 p3;
+    glm::vec4 p4;
+    float oldPhiAngle;
+    float oldThetaAngle;
     float angulo1;
     float angulo2;
     float tempoDash;
@@ -234,8 +240,8 @@ float easing(float tempo);
 void DrawHUD(float tempo);
 //Angry Related
 void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis);
-void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_up_vector);
-glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float *delta_t);
+void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_v);
+glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float t);
 glm::vec4  MulVetPont(float valor,glm::vec4 vet);
 //Game state related
 JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap,VAR_ANGRY_CAP *jogoAngryCap);
@@ -973,11 +979,8 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis, ESTADO_JOGO *
         // pela biblioteca GLFW.
         glfwPollEvents();
 }
-        glm::vec4 p1 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
-        glm::vec4 p2 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
-        glm::vec4 p3 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
-        glm::vec4 p4 = glm::vec4(0.0f,0.0f,0.0f,0.0f);
 
+        glm::vec4 target;
 void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 // Aqui executamos as operaУЇУЕes de renderizaУЇУЃo
 
@@ -1061,7 +1064,8 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
         w = w/norm(w);
         glm::vec4 u = crossproduct(camera_up_vector, w);
         u = u/norm(u);
-
+        glm::vec4 v = crossproduct(w, u);
+        v = v/norm(v);
 
         float cur_time = (float)glfwGetTime();
         float delta_t = cur_time - variaveis->prev_time;
@@ -1086,18 +1090,25 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
             variaveis->capPos.y = variaveis->capPrevPos.y + (variaveis->capNextPos.y - variaveis->capPrevPos.y) * easing(variaveis->tempoDash/MAXTEMPODASH);
         }
         */
-        glm::vec4 p1 = variaveis->camera_position_c;
-        glm::vec4 p2 = variaveis->camera_position_c;
-        glm::vec4 p3 = variaveis->camera_position_c;
-        glm::vec4 p4 = variaveis->camera_position_c;
+        variaveis->p1 = glm::vec4(variaveis->camera_position_c.x, variaveis->camera_position_c.y, variaveis->camera_position_c.z, 1.0);
+        //variaveis->p2 = variaveis->p1;
+        //variaveis->p3 = variaveis->p1;
+        //variaveis->p4 = variaveis->p1;
 
         variaveis->capPrevPos = variaveis->capPos;
+        float maxTempTrow = 3.0f;
 
         if (keySPACE) {
             if(variaveis-> calTrow){
-            variaveis->capNextPos.x  = variaveis->capNextPos.x + (camera_view.x);
-            variaveis->capNextPos.y  = variaveis->capNextPos.y + (camera_view.y);
-            variaveis->capNextPos.z  = variaveis->capNextPos.z + (camera_view.z);
+
+            variaveis->tempoDash = std::min(variaveis->tempoDash + delta_t, (float)maxTempTrow);
+            printf("%f",variaveis->tempoDash);
+            //float um = 1.0f;
+            target = CalcBezie(&variaveis->p1,&variaveis->p2,&variaveis->p3,&variaveis->p4,(variaveis->tempoDash)/maxTempTrow);
+            variaveis->capNextPos = target;
+            //variaveis->capNextPos.x  = variaveis->capNextPos.x + (camera_view.x);
+            //variaveis->capNextPos.y  = variaveis->capNextPos.y + (camera_view.y);
+            //variaveis->capNextPos.z  = variaveis->capNextPos.z + (camera_view.z);
             //variaveis->capNextPos.z = variaveis->capNextPos.z + (variaveis->camera_position_c.z+4);
             //variaveis->tempoDash = 0.1;
             //Capivara vai da posiУЇУЃo Prev atУЉ a posiУЇУЃo Next
@@ -1112,8 +1123,8 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 
             model = Matrix_Translate(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z)
             * Matrix_Rotate_X(-PI/2)
-            * Matrix_Rotate_Z(g_CameraTheta)
-            * Matrix_Rotate_X(-g_CameraPhi);
+            * Matrix_Rotate_Z(variaveis->oldThetaAngle)
+            * Matrix_Rotate_X(-variaveis->oldPhiAngle);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, CAPIVARA);
             DrawVirtualObject("object_0");
@@ -1125,8 +1136,15 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
             }
             else
             {
-                PontosCurva(&p1,&p2,&p3,&p4,&camera_view,&camera_up_vector);
-                glm::vec4 teste = CalcBezie(&p1,&p2,&p3,&p4,0);
+
+            PontosCurva(&variaveis->p1,&variaveis->p2,&variaveis->p3,&variaveis->p4,&camera_view,&v);
+
+            model = Matrix_Translate(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z)
+            * Matrix_Rotate_X(-PI/2)
+            * Matrix_Rotate_Z(g_CameraTheta)
+            * Matrix_Rotate_X(-g_CameraPhi);
+             variaveis->oldPhiAngle = g_CameraPhi;
+             variaveis->oldThetaAngle = g_CameraTheta;
                 variaveis-> calTrow = true; //TODO LEMBRAR QUE DEPOIS DE DEPOIS DE TERMINAR A ANIMAÇÃO, TEM QUE SETAR CALTROW PRA ZERO DNV
             }
         }
@@ -1224,7 +1242,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 }
 glm::vec4  MulVetPont(float valor,glm::vec4 vet)
 {
-    return (glm::vec4(valor,valor,valor,1)*(vet));
+    return (glm::vec4(valor*vet.x,valor*vet.y,valor*vet.z,1));
 }
 
 void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm::vec2 *capPrevPos, glm::vec2 *capNextPos, glm::vec4 *camera_position_c, float *tempoDash) {
@@ -1242,9 +1260,10 @@ void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm
         *tempoDash = 0.0;
     }
 }
-void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_up) {
-    glm::vec4 tempCamV = *camera_view/norm(*camera_view);
-    glm::vec4 tempCamUp = *camera_up/norm(*camera_up);
+void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_v) {
+    glm::vec4 tempCamView = *camera_view/norm(*camera_view);
+    glm::vec4 tempCamV = *camera_v/norm(*camera_v);
+    /*
     for (int i = 0; i < 4; i++) {
         *p2 = *p2+tempCamV;
         *p2 = *p2+tempCamUp;
@@ -1253,20 +1272,24 @@ void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::ve
     for (int i = 0; i < 2; i++) {
         *p3 = *p3+tempCamV;
     }
-    *p4 = *p1+(glm::vec4(8,8,8,1)*tempCamV);
+    */
+    *p2 = *p1+(glm::vec4(4,4,4,1)*tempCamView) + (glm::vec4(4,4,4,1)*tempCamV);
+    *p3 = *p2+(glm::vec4(2,2,2,1)*tempCamView);
+    *p4 = *p1+(glm::vec4(8,8,8,1)*tempCamView);
     PrintVector(*p1);
     PrintVector(*p2);
     PrintVector(*p3);
     PrintVector(*p4);
     }
-glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float *delta_t) {
+glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float t) {
     glm::vec4 target = glm::vec4(0,0,0,0);
-    float b03 = pow((1-(*delta_t)),3);
-    float b13 = 3*(*delta_t)*pow((1-(*delta_t)),2);
-    float b23 = 3*(pow((*delta_t),2))*(1-(*delta_t));
-    float b33= pow(*delta_t,3);
+    float b03 = pow((1-(t)),3);
+    float b13 = 3*(t)*pow((1-(t)),2);
+    float b23 = 3*(pow((t),2))*(1-(t));
+    float b33= pow(t,3);
 
-    target = MulVetPont(b03,(*p1))+MulVetPont(b13,(*p2))+MulVetPont(b23,(*p3))+MulVetPont(b33,(*p4));
+    target = b03*(*p1)+ b13*(*p2) + b23*(*p3)+b33*(*p4);
+    //target.w = target.w/target.w;
     PrintVector(target);
     return target;
     }
@@ -1281,8 +1304,8 @@ float easing(float tempo) {
 
 JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_DESVIE_CAP *jogoDesvieCap, VAR_ANGRY_CAP  *jogoAngryCap) {
     *estado = EM_JOGO;
-    int rng = rand() % NUM_JOGOS + 1; // para aleatorio deixe essa linha
-    //int rng = ANGRYCAP; // para deixar o jogo sempre o mesmo
+    //int rng = rand() % NUM_JOGOS + 1; // para aleatorio deixe essa linha
+    int rng = ANGRYCAP; // para deixar o jogo sempre o mesmo
     float prev_time = (float) glfwGetTime();
 
     switch (rng) {
@@ -1327,8 +1350,14 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         jogoAngryCap->angulo1 = 0;
         jogoAngryCap->angulo2 = 0;
         jogoAngryCap->tempoDash = 0.0f;
+        jogoAngryCap->p1 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
+        jogoAngryCap->p2 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
+        jogoAngryCap->p3 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
+        jogoAngryCap->p4 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
         jogoAngryCap->speed = 2.0f;
-        jogoAngryCap->capSpeed = 0.01f;
+        jogoAngryCap->capSpeed = 10.0f;
+        jogoAngryCap->oldPhiAngle = 10.0f;
+        jogoAngryCap->oldThetaAngle = 10.0f;
         jogoAngryCap->prev_time = prev_time;
         g_CameraPhi = 0;
         g_CameraTheta = PI;
