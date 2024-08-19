@@ -239,7 +239,7 @@ void LogicaCapivara(ESTADO_CAPIVARA *estado, float *tempo, glm::vec2 capPos, glm
 float easing(float tempo);
 void DrawHUD(float tempo);
 //Angry Related
-void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis);
+void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis, ESTADO_JOGO *estado);
 void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::vec4 *camera_view,glm::vec4 *camera_v);
 glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float t);
 glm::vec4  MulVetPont(float valor,glm::vec4 vet);
@@ -298,6 +298,7 @@ float tempoJogo = 0;
 
 #define TEMPOCAPIMP 10
 #define TEMPODESVIECAP 30
+#define TEMPOANGRYCAP 60
 
 // Variѝveis que definem a cтmera em coordenadas esfщricas, controladas pelo
 // usuѝrio atravщs do mouse (veja funчуo CursorPosCallback()). A posiчуo
@@ -469,7 +470,7 @@ int main(int argc, char* argv[])
         if (jogoAtual == NONE) jogoAtual = TrocaDeJogo(&estadoAtual, &jogoCapImpostora, &jogoDesvieCap, &jogoAngryCap);
         if (jogoAtual == DESVIECAPIVARA) DesvieCapivara(window, &jogoDesvieCap, &estadoAtual);
         if (jogoAtual == CAPIVARAIMPOSTORA) CapivaraImpostora(window, &jogoCapImpostora, &estadoAtual);
-        if (jogoAtual == ANGRYCAP) AngryCap(window, &jogoAngryCap);
+        if (jogoAtual == ANGRYCAP) AngryCap(window, &jogoAngryCap,&estadoAtual);
     }
 
     // Finalizamos o uso dos recursos do sistema operacional
@@ -981,7 +982,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis, ESTADO_JOGO *
 }
 
         glm::vec4 target;
-void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
+void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) {
 // Aqui executamos as operaУЇУЕes de renderizaУЇУЃo
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor УЉ
@@ -1028,7 +1029,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
         // Note que, no sistema de coordenadas da cУЂmera, os planos near e far
         // estУЃo no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // PosiУЇУЃo do "near plane"
-        float farplane  = -10.0f; // PosiУЇУЃo do "far plane"
+        float farplane  = -20.0f; // PosiУЇУЃo do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -1072,6 +1073,9 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
         variaveis->prev_time = cur_time;
         variaveis->tempoEstado -= 1 * delta_t;
 
+        tempoJogo -= delta_t;
+        if (tempoJogo <= 0)
+            *estado = DERROTA;
 
         if (keyW) variaveis->camera_position_c += -w * variaveis->speed * delta_t;
         if (keyA) variaveis->camera_position_c += -u * variaveis->speed * delta_t;
@@ -1097,12 +1101,13 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
 
         variaveis->capPrevPos = variaveis->capPos;
         float maxTempTrow = 3.0f;
-
+        glm::vec4 bbox_cap_min = glm::vec4(0, 0, 0, 1);
+        glm::vec4 bbox_cap_max  = glm::vec4(0, 0, 0, 1);
         if (keySPACE) {
             if(variaveis-> calTrow){
 
             variaveis->tempoDash = std::min(variaveis->tempoDash + delta_t, (float)maxTempTrow);
-            printf("%f",variaveis->tempoDash);
+            //printf("%f",variaveis->tempoDash);
             //float um = 1.0f;
             target = CalcBezie(&variaveis->p1,&variaveis->p2,&variaveis->p3,&variaveis->p4,(variaveis->tempoDash)/maxTempTrow);
             variaveis->capNextPos = target;
@@ -1133,6 +1138,9 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
             DrawVirtualObject("object_2");
             //glUniform1i(g_object_id_uniform, CAPIVARA);
             DrawVirtualObject("object_3");
+
+              bbox_cap_min = model * glm::vec4(-0.18, -0.67, -0.41, 1);
+              bbox_cap_max = model * glm::vec4(0.18, 0.48, 0.31, 1);
             }
             else
             {
@@ -1210,11 +1218,36 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis) {
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        DrawHUD(variaveis->tempoEstado/3);
+
+
+
+        model = Matrix_Translate(0.0f, 3.0f, 8.0f)
+              * Matrix_Scale(TAMANHO_SALA_X,1,1)
+              * Matrix_Rotate_X(-PI/2);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, WALL);
+        DrawVirtualObject("the_plane");
+
+
+
+        // Hitbox do jogador
+        glm::vec4 maxHitbox = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
+        glm::vec4 minHitbox = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
+
+
+        // Se a capivara encostar no alvo desative o alvo
+        if (CuboCubo(minHitbox, maxHitbox, bbox_cap_min, bbox_cap_max)) {
+            //printf("tocou");
+            *estado = VITORIA;
+        }
+
+
+
+        DrawHUD(tempoJogo/60);
 
         // Imprimimos na tela os УЂngulos de Euler que controlam a rotaУЇУЃo do
         // terceiro cubo.
-        TextRendering_ShowEstado(window, variaveis->estado, variaveis->tempoEstado);
+        TextRendering_ShowEstado(window, variaveis->estado, tempoJogo);
         TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
         //TextRendering_ShowCapPos(window, variaveis->capPos, variaveis->capPrevPos, variaveis->capNextPos);
         TextRendering_ShowCapAngulo(window, variaveis->capView, variaveis->angulo1);
@@ -1290,7 +1323,7 @@ glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, fl
 
     target = b03*(*p1)+ b13*(*p2) + b23*(*p3)+b33*(*p4);
     //target.w = target.w/target.w;
-    PrintVector(target);
+    //PrintVector(target);
     return target;
     }
 float easing(float tempo) {
@@ -1362,6 +1395,7 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         g_CameraPhi = 0;
         g_CameraTheta = PI;
         jogoAngryCap-> calTrow = false;
+        tempoJogo = TEMPOANGRYCAP;
         return ANGRYCAP;
         break;
     default:
