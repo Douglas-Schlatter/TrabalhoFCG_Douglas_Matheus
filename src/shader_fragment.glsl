@@ -32,6 +32,7 @@ uniform int game_ID;
 #define VITORIA 6
 #define DERROTA 7
 #define TARGET 8
+#define RPlANE 9
 #define M_PI 3.141592
 
 #define CAPIVARAIMPOSTORA 1
@@ -50,7 +51,7 @@ uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
 uniform sampler2D TextureImage4;
-
+uniform sampler2D TextureImage5;
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
 
@@ -494,6 +495,20 @@ void Jogo3() {
         V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
 
         Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
+    }
+        else if ( object_id == RPlANE )
+    {
+        // PREENCHA AQUI
+        // Propriedades espectrais do plano
+        Kd = vec3(0.2,0.2,0.2);
+        Ks = vec3(0.3,0.3,0.3);
+        Ka = vec3(0.5,0.5,0.5);
+        q = 20.0;
+
+        U = position_model.x - floor(position_model.x);
+        //V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
+        V = position_model.z - floor(position_model.z);
+        Kd0 = texture(TextureImage5, vec2(U,V)).rgb;
     }
     else if ( object_id == CAPIVARA)
     {

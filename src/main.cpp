@@ -96,6 +96,9 @@ struct VAR_ANGRY_CAP {
     glm::vec3 capPos;
     glm::vec3 capPrevPos;
     glm::vec3 capNextPos;
+    //glm::vec4 targetsPos;
+    //glm::vec4 targetsPrevPos;
+    //glm::vec4 targetsNextPos;
     glm::vec4 capView;
     glm::vec4 p1;
     glm::vec4 p2;
@@ -109,6 +112,8 @@ struct VAR_ANGRY_CAP {
     bool calTrow;
     bool reachF ;
     bool trow ;
+    glm::vec4 targets;
+    bool hitTarget;
 };
 
 struct VAR_DESVIE_CAP {
@@ -301,7 +306,7 @@ float tempoJogo = 0;
 
 #define TEMPOCAPIMP 10
 #define TEMPODESVIECAP 30
-#define TEMPOANGRYCAP 30
+#define TEMPOANGRYCAP 20
 
 // Variѝveis que definem a cтmera em coordenadas esfщricas, controladas pelo
 // usuѝrio atravщs do mouse (veja funчуo CursorPosCallback()). A posiчуo
@@ -419,7 +424,8 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/chao.jpg");      // TextureImage1
     LoadTextureImage("../../data/parede.jpg");      // TextureImage2
     LoadTextureImage("../../data/moon.jpg");      // TextureImage3
-       LoadTextureImage("../../data/target.png");      // TextureImage3
+    LoadTextureImage("../../data/target.png");      // TextureImage3
+    LoadTextureImage("../../data/brick.jpg");      // TextureImage3
 
     // Construѝmos a representaчуo de objetos geomщtricos atravщs de malhas de triтngulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -1078,7 +1084,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         variaveis->prev_time = cur_time;
         variaveis->tempoEstado -= 1 * delta_t;
 
-        //tempoJogo -= delta_t; //Para o tempo passar
+        tempoJogo -= delta_t; //Para o tempo passar
         if (tempoJogo <= 0)
             *estado = DERROTA;
 
@@ -1105,7 +1111,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         //variaveis->p4 = variaveis->p1;
 
         variaveis->capPrevPos = variaveis->capPos;
-        float maxTempTrow = 3.0f;
+        float maxTempTrow = 1.5f;
         glm::vec4 bbox_cap_min = glm::vec4(0, 0, 0, 1);
         glm::vec4 bbox_cap_max  = glm::vec4(0, 0, 0, 1);
 
@@ -1151,14 +1157,14 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
               bbox_cap_max = model * glm::vec4(0.18, 0.48, 0.31, 1);
 
               //if(variaveis->p4 == glm::vec4(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z,1.0f))
-              if((variaveis->capPos.x > (variaveis->p4.x)-0.1)&& (variaveis->capPos.x <= (variaveis->p4.x)+0.1))
+              if(((variaveis->capPos.x > (variaveis->p4.x)-0.1)&& (variaveis->capPos.x <= (variaveis->p4.x)+0.1)) || variaveis->hitTarget == true)
               {
                   printf("Chegou no final");
                   variaveis->tempoDash  = 0.0f;
                   variaveis->trow = false;
-                  variaveis-> calTrow = true;
                   variaveis->reachF = true;
                   variaveis-> calTrow = false;
+                  variaveis->hitTarget = false;
               }
              }
             else
@@ -1190,6 +1196,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         #define CAPIVARA 3
         #define CAPIVARA2 4
         #define TARGET 8
+        #define RPlANE 9
         #define HUD 5
         /* OLD ANGLE CODE
         if (variaveis->estado == ATENCAO) {
@@ -1235,9 +1242,9 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
 
 
         model = Matrix_Translate(0.0f, -1.0f, 0.0f)
-              * Matrix_Scale(TAMANHO_SALA_X, 1, TAMANHO_SALA_Y);
+              * Matrix_Scale(9, 9, 9);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, PLANE);
+        glUniform1i(g_object_id_uniform, RPlANE);
         DrawVirtualObject("the_plane");
 
 
@@ -1291,22 +1298,29 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
 
                 // Se a capivara encostar no alvo desative o alvo
         if (CuboCubo(minHitboxT1, maxHitboxT1, bbox_cap_min, bbox_cap_max)) {
-            *estado = VITORIA;
+            variaveis->hitTarget = true;
+            variaveis->targets.x = 1.0f;
         }
         if (CuboCubo(minHitboxT2, maxHitboxT2, bbox_cap_min, bbox_cap_max)) {
-            *estado = VITORIA;
+            variaveis->hitTarget = true;
+            variaveis->targets.y = 1.0f;
         }
         if (CuboCubo(minHitboxT3, maxHitboxT3, bbox_cap_min, bbox_cap_max)) {
-            *estado = VITORIA;
+            variaveis->hitTarget = true;
+            variaveis->targets.z = 1.0f;
         }
         if (CuboCubo(minHitboxT4, maxHitboxT4, bbox_cap_min, bbox_cap_max)) {
+            variaveis->hitTarget = true;
+            variaveis->targets.w = 1.0f;
+        }
+
+        if(variaveis->targets == glm::vec4(1.0f,1.0f,1.0f,1.0f))
+        {
             *estado = VITORIA;
         }
 
 
-
-
-        DrawHUD(tempoJogo/30);
+        DrawHUD(tempoJogo/20);
 
         // Imprimimos na tela os УЂngulos de Euler que controlam a rotaУЇУЃo do
         // terceiro cubo.
@@ -1436,11 +1450,12 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         break;
     case ANGRYCAP:
         jogoAngryCap->camera_position_c = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-        jogoAngryCap->estado = ESPERA;
-        jogoAngryCap->tempoEstado = 3.0;
         jogoAngryCap->capPos = glm::vec3(0, -0.3,0);
         jogoAngryCap->capNextPos = glm::vec3(0, 0,0);
         jogoAngryCap->capPrevPos = glm::vec3(0, 0,0);
+        //jogoAngryCap->targetsPos = glm::vec4(glm::vec3(0, 0,0), glm::vec3(0, 0,0),glm::vec3(0, 0,0));
+        //jogoAngryCap->targetsNextPos = glm::vec4(glm::vec3(0, 0,0), glm::vec3(0, 0,0),glm::vec3(0, 0,0));
+        //jogoAngryCap->targetsPrevPos = glm::vec4(glm::vec3(0, 0,0), glm::vec3(0, 0,0),glm::vec3(0, 0,0));
         jogoAngryCap->capView = glm::vec4(0.0, 0.0, 1.0, 0.0);
         jogoAngryCap->capView = jogoAngryCap->capView/norm(jogoAngryCap->capView);
         jogoAngryCap->angulo1 = 0;
@@ -1451,7 +1466,7 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         jogoAngryCap->p3 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
         jogoAngryCap->p4 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
         jogoAngryCap->speed = 2.0f;
-        jogoAngryCap->capSpeed = 10.0f;
+        jogoAngryCap->capSpeed = 15.0f;
         jogoAngryCap->oldPhiAngle = 10.0f;
         jogoAngryCap->oldThetaAngle = 10.0f;
         jogoAngryCap->prev_time = prev_time;
@@ -1461,6 +1476,8 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         tempoJogo = TEMPOANGRYCAP;
         jogoAngryCap-> reachF = false;
         jogoAngryCap-> trow = false;
+        jogoAngryCap-> targets =glm::vec4(0.0f,0.0f,0.0f,0.0f);;
+        jogoAngryCap-> hitTarget = false;
         return ANGRYCAP;
         break;
     default:
@@ -1637,6 +1654,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage3"), 3);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage4"), 4);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage5"), 5);
     glUseProgram(0);
 }
 
