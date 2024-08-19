@@ -416,6 +416,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/chao.jpg");      // TextureImage1
     LoadTextureImage("../../data/parede.jpg");      // TextureImage2
     LoadTextureImage("../../data/moon.jpg");      // TextureImage3
+       LoadTextureImage("../../data/target.png");      // TextureImage3
 
     // Construѝmos a representaчуo de objetos geomщtricos atravщs de malhas de triтngulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -1222,10 +1223,10 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
 
 
         model = Matrix_Translate(0.0f, 3.0f, 8.0f)
-              * Matrix_Scale(TAMANHO_SALA_X,1,1)
+              * Matrix_Scale(1,1,1)
               * Matrix_Rotate_X(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, WALL);
+        glUniform1i(g_object_id_uniform, 8);
         DrawVirtualObject("the_plane");
 
 
@@ -1571,6 +1572,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage3"), 3);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage4"), 4);
     glUseProgram(0);
 }
 

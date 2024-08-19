@@ -31,6 +31,7 @@ uniform int game_ID;
 #define HUD  5
 #define VITORIA 6
 #define DERROTA 7
+#define TARGET 8
 #define M_PI 3.141592
 
 #define CAPIVARAIMPOSTORA 1
@@ -48,6 +49,7 @@ uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
 uniform sampler2D TextureImage3;
+uniform sampler2D TextureImage4;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -464,6 +466,21 @@ void Jogo3() {
 
         Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
     }
+        else if ( object_id == TARGET )
+    {
+        // PREENCHA AQUI
+        // Propriedades espectrais do coelho
+        Kd = vec3(0.8,0.8,0.8);
+        Ks = vec3(0.3,0.3,0.3);
+        Ka = vec3(1,1,1);
+        q = 20.0;
+
+        U = (position_model.x - bbox_min.x)/(bbox_max.x - bbox_min.x);
+        V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
+
+        Kd0 = texture(TextureImage4, vec2(U,V)).rgb;
+    }
+
     else if ( object_id == PLANE )
     {
         // PREENCHA AQUI
