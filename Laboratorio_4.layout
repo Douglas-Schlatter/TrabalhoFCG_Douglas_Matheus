@@ -2,9 +2,93 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="include\matrices.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\shader_vertex.glsl" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="1" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="4652" topLine="127" />
+			<Cursor1 position="5395" topLine="119" />
+		</Cursor>
+	</File>
+	<File name="include\tiny_obj_loader.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1816" topLine="3431" />
+		</Cursor>
+	</File>
+	<File name="src\matrices.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2536" topLine="91" />
+		</Cursor>
+	</File>
+	<File name="include\matrices.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4652" topLine="93" />
+		</Cursor>
+	</File>
+	<File name="src\collisions.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="68" topLine="99" />
+		</Cursor>
+	</File>
+	<File name="src\shader_vertex2.glsl" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\shader_fragment.glsl" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="1" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="17096" topLine="164" />
+		</Cursor>
+		<Folding>
+			<Collapse line="78" />
+			<Collapse line="234" />
+		</Folding>
+	</File>
+	<File name="src\shader_fragment2.glsl" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="130" />
+		</Cursor>
+	</File>
+	<File name="src\main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="63459" topLine="1240" />
+		</Cursor>
+		<Folding>
+			<Collapse line="492" />
+			<Collapse line="1488" />
+			<Collapse line="1499" />
+			<Collapse line="1520" />
+			<Collapse line="1573" />
+			<Collapse line="1607" />
+			<Collapse line="1662" />
+			<Collapse line="1668" />
+			<Collapse line="1683" />
+			<Collapse line="1745" />
+			<Collapse line="1845" />
+			<Collapse line="1859" />
+			<Collapse line="1889" />
+			<Collapse line="1903" />
+			<Collapse line="1918" />
+			<Collapse line="1988" />
+			<Collapse line="2040" />
+			<Collapse line="2064" />
+			<Collapse line="2118" />
+			<Collapse line="2186" />
+			<Collapse line="2204" />
+			<Collapse line="2334" />
+			<Collapse line="2341" />
+			<Collapse line="2394" />
+			<Collapse line="2409" />
+			<Collapse line="2422" />
+			<Collapse line="2435" />
+			<Collapse line="2448" />
+			<Collapse line="2461" />
+			<Collapse line="2468" />
+			<Collapse line="2477" />
+			<Collapse line="2493" />
+			<Collapse line="2530" />
+		</Folding>
+	</File>
+	<File name="src\textrendering.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2352" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="src\glad.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -12,68 +96,9 @@
 			<Cursor1 position="4158" topLine="173" />
 		</Cursor>
 	</File>
-	<File name="src\main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="34503" topLine="563" />
-		</Cursor>
-		<Folding>
-			<Collapse line="117" />
-			<Collapse line="452" />
-			<Collapse line="1003" />
-			<Collapse line="1019" />
-			<Collapse line="1085" />
-			<Collapse line="1106" />
-			<Collapse line="1159" />
-			<Collapse line="1193" />
-			<Collapse line="1245" />
-			<Collapse line="1251" />
-			<Collapse line="1266" />
-			<Collapse line="1330" />
-			<Collapse line="1474" />
-			<Collapse line="1488" />
-			<Collapse line="1503" />
-			<Collapse line="1573" />
-			<Collapse line="1625" />
-			<Collapse line="1649" />
-			<Collapse line="1703" />
-		</Folding>
-	</File>
-	<File name="src\shader_vertex2.glsl" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\shader_vertex.glsl" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="1" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5800" topLine="5" />
-		</Cursor>
-	</File>
 	<File name="include\utils.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="55" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\textrendering.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2352" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\shader_fragment2.glsl" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="130" />
-		</Cursor>
-	</File>
-	<File name="src\shader_fragment.glsl" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="1" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1669" topLine="36" />
-		</Cursor>
-		<Folding>
-			<Collapse line="66" />
-		</Folding>
-	</File>
-	<File name="include\tiny_obj_loader.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1816" topLine="3431" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

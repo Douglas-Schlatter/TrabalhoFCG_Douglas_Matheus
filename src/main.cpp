@@ -329,7 +329,7 @@ float g_TorsoPositionY = 0.0f;
 bool g_UsePerspectiveProjection = true;
 
 // Variѝvel que controla se o texto informativo serѝ mostrado na tela.
-bool g_ShowInfoText = true;
+bool g_ShowInfoText = false;
 
 // Variѝveis que definem um programa de GPU (shaders). Veja funчуo LoadShadersFromFiles().
 GLuint g_GpuProgramID = 0;
@@ -348,7 +348,7 @@ GLuint g_NumLoadedTextures = 0;
 
 int main(int argc, char* argv[])
 {
-    std::srand(glfwGetTime());
+
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
     // sistema operacional, onde poderemos renderizar com OpenGL.
     int success = glfwInit();
@@ -407,6 +407,8 @@ int main(int argc, char* argv[])
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     FramebufferSizeCallback(window, 800, 600); // Forчamos a chamada do callback acima, para definir g_ScreenRatio.
 
+
+
     // Imprimimos no terminal informaчѕes sobre a GPU do sistema
     const GLubyte *vendor      = glGetString(GL_VENDOR);
     const GLubyte *renderer    = glGetString(GL_RENDERER);
@@ -452,7 +454,7 @@ int main(int argc, char* argv[])
         ObjModel model(argv[1]);
         BuildTrianglesAndAddToVirtualScene(&model);
     }
-
+    std::srand(glfwGetTime());
     // Inicializamos o cѓdigo para renderizaчуo de texto.
     TextRendering_Init();
 
@@ -1159,7 +1161,7 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
               //if(variaveis->p4 == glm::vec4(variaveis->capPos.x,variaveis->capPos.y,variaveis->capPos.z,1.0f))
               if(((variaveis->capPos.x > (variaveis->p4.x)-0.1)&& (variaveis->capPos.x <= (variaveis->p4.x)+0.1)) || variaveis->hitTarget == true)
               {
-                  printf("Chegou no final");
+                  //printf("Chegou no final");
                   variaveis->tempoDash  = 0.0f;
                   variaveis->trow = false;
                   variaveis->reachF = true;
@@ -1386,10 +1388,10 @@ void PontosCurva(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4,glm::ve
     *p2 = *p1+(glm::vec4(4,4,4,1)*tempCamView) + (glm::vec4(4,4,4,1)*tempCamV);
     *p3 = *p2+(glm::vec4(2,2,2,1)*tempCamView);
     *p4 = *p1+(glm::vec4(8,8,8,1)*tempCamView);
-    PrintVector(*p1);
-    PrintVector(*p2);
-    PrintVector(*p3);
-    PrintVector(*p4);
+    //PrintVector(*p1);
+    //PrintVector(*p2);
+    //PrintVector(*p3);
+    //PrintVector(*p4);
     }
 glm::vec4  CalcBezie(glm::vec4 *p1,glm::vec4 *p2,glm::vec4 *p3,glm::vec4 *p4, float t) {
     glm::vec4 target = glm::vec4(0,0,0,0);
