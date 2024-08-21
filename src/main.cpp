@@ -112,6 +112,7 @@ struct VAR_ANGRY_CAP {
     float angulo1;
     float angulo2;
     float tempoDash;
+    std::vector <float> tempoTarget;
     bool calTrow;
     bool reachF ;
     bool trow ;
@@ -1255,10 +1256,22 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         glUniform1i(g_object_id_uniform, RPlANE);
         DrawVirtualObject("the_plane");
 
-
+        float maxTempTarget = 3.0f;
         //Desenhando os targets
+        /*
         if(variaveis->estadoTarget[0])// se o alvo estiver indo
         {
+          if(((variaveis->targetsPos[0].x > (variaveis->maxPos[0].x)-0.1)&& (variaveis->targetsPos[0].x <= (variaveis->maxPos[0].x)+0.1))
+                 &&((variaveis->targetsPos[0].y > (variaveis->maxPos[0].y)-0.1)&& (variaveis->targetsPos[0].y <= (variaveis->maxPos[0].y)+0.1))
+                 &&((variaveis->targetsPos[0].z > (variaveis->maxPos[0].z)-0.1)&& (variaveis->targetsPos[0].z <= (variaveis->maxPos[0].z)+0.1)))
+              {
+                  variaveis->estadoTarget[0] = false;
+                  variaveis->tempoTarget[0]  = 0.0f;
+              }
+
+              variaveis->tempoTarget[0] = std::min(variaveis->tempoTarget[0] + delta_t, (float)maxTempTarget);
+              variaveis->targetsPos[0]= variaveis->minPos[0] + (variaveis->maxPos[0] - variaveis->minPos[0]) * ((variaveis->tempoTarget[0])/maxTempTarget);
+
             //if((variaveis->targetsPos.x > (variaveis->maxPos.x)-0.1)&& (variaveis->capPos.x <= (variaveis->max.x)+0.1))// se chegamos no ao ponto maximo coloque para voltar
             //   {
             //   }
@@ -1266,42 +1279,70 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         }
         else //se o alvo estiver voltando
             {
-            }
+              if(((variaveis->targetsPos[0].x > (variaveis->minPos[0].x)-0.1)&& (variaveis->targetsPos[0].x <= (variaveis->minPos[0].x)+0.1))
+                 &&((variaveis->targetsPos[0].y > (variaveis->minPos[0].y)-0.1)&& (variaveis->targetsPos[0].y <= (variaveis->minPos[0].y)+0.1))
+                 &&((variaveis->targetsPos[0].z > (variaveis->minPos[0].z)-0.1)&& (variaveis->targetsPos[0].z <= (variaveis->minPos[0].z)+0.1)))
+              {
+                  variaveis->estadoTarget[0] = true;
+                  variaveis->tempoTarget[0]  = 0.0f;
+              }
+                */
+              //variaveis->tempoTarget[0] = std::min(variaveis->tempoTarget[0] + delta_t, (float)maxTempTarget);
+     for (int i = 0; i < 4; i++) {
+         variaveis->targetsPos[i]= variaveis->maxPos[i] + (variaveis->minPos[i] - variaveis->maxPos[i]) * (float(cos(cur_time+1)/2));  //(variaveis->tempoTarget[0])/maxTempTarget);
 
-        model = Matrix_Translate(-2.0f, 3.0f, 8.0f)
+
+     }
+
+
+           // }
+
+        printf("%f /n",variaveis->targetsPos[0].x);
+        if(variaveis->estadoTarget[0])
+        {
+        model = Matrix_Translate(variaveis->targetsPos[0].x, variaveis->targetsPos[0].y, variaveis->targetsPos[0].z)
               * Matrix_Scale(1,1,1)
               * Matrix_Rotate_X(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, TARGET);
         DrawVirtualObject("the_plane");
 
-         // Hitbox do jogador
+        }
         glm::vec4 maxHitboxT1 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
         glm::vec4 minHitboxT1 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
 
-        model = Matrix_Translate(2.0f, 2.0f, 7.0f)
+         // Hitbox do jogador
+        if(variaveis->estadoTarget[1])
+        {
+
+        model = Matrix_Translate(variaveis->targetsPos[1].x, variaveis->targetsPos[1].y, variaveis->targetsPos[1].z)
               * Matrix_Scale(1,1,1)
               * Matrix_Rotate_X(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, TARGET);
         DrawVirtualObject("the_plane");
 
-        // Hitbox do jogador
+
+        }
         glm::vec4 maxHitboxT2 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
         glm::vec4 minHitboxT2 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
-
-        model = Matrix_Translate(2.0f, 2.0f, -7.0f)
+        if(variaveis->estadoTarget[2])
+        {
+        model = Matrix_Translate(variaveis->targetsPos[2].x, variaveis->targetsPos[2].y, variaveis->targetsPos[2].z)
               * Matrix_Scale(1,1,1)
               * Matrix_Rotate_X(PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, TARGET);
         DrawVirtualObject("the_plane");
 
-        // Hitbox do jogador
+
+
+        }
         glm::vec4 maxHitboxT3 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
         glm::vec4 minHitboxT3 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
-
-        model = Matrix_Translate(-2.0f, 3.0f, -8.0f)
+        if(variaveis->estadoTarget[3])
+        {
+        model = Matrix_Translate(variaveis->targetsPos[3].x, variaveis->targetsPos[3].y, variaveis->targetsPos[3].z)
         * Matrix_Scale(1,1,1)
         * Matrix_Rotate_X(PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -1309,27 +1350,44 @@ void AngryCap(GLFWwindow *window, VAR_ANGRY_CAP *variaveis,ESTADO_JOGO *estado) 
         DrawVirtualObject("the_plane");
 
         // Hitbox do jogador
+
+        }
         glm::vec4 maxHitboxT4 = model * glm::vec4(1.0f,1.0f,0.5f,1.0f);
         glm::vec4 minHitboxT4 = model * glm::vec4(-1.0f,-1.0f,-0.5f,1.0f);
 
-
-
                 // Se a capivara encostar no alvo desative o alvo
+        if(variaveis->estadoTarget[0])
+        {
         if (CuboCubo(minHitboxT1, maxHitboxT1, bbox_cap_min, bbox_cap_max)) {
+            variaveis->estadoTarget[0] = false;
             variaveis->hitTarget = true;
             variaveis->targets.x = 1.0f;
         }
+        }
+
+        if(variaveis->estadoTarget[1])
+        {
         if (CuboCubo(minHitboxT2, maxHitboxT2, bbox_cap_min, bbox_cap_max)) {
+            variaveis->estadoTarget[1] = false;
             variaveis->hitTarget = true;
             variaveis->targets.y = 1.0f;
         }
+        }
+        if(variaveis->estadoTarget[2])
+        {
         if (CuboCubo(minHitboxT3, maxHitboxT3, bbox_cap_min, bbox_cap_max)) {
+            variaveis->estadoTarget[2] = false;
             variaveis->hitTarget = true;
             variaveis->targets.z = 1.0f;
         }
+        }
+        if(variaveis->estadoTarget[3])
+        {
         if (CuboCubo(minHitboxT4, maxHitboxT4, bbox_cap_min, bbox_cap_max)) {
+            variaveis->estadoTarget[3] = false;
             variaveis->hitTarget = true;
             variaveis->targets.w = 1.0f;
+        }
         }
 
         if(variaveis->targets == glm::vec4(1.0f,1.0f,1.0f,1.0f))
@@ -1497,8 +1555,8 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
                             glm::vec4(-2.0f, 3.0f, -8.0f,1.0f)};
 
         jogoAngryCap-> maxPos = {glm::vec4(2.0f, 3.0f, 8.0f,1.0f),
-                            glm::vec4(2.0f, -2.0f, 7.0f, 1.0f),
-                            glm::vec4(2.0f, -2.0f, -7.0f,1.0f),
+                            glm::vec4(2.0f, 4.0f, 7.0f, 1.0f),
+                            glm::vec4(2.0f, 4.0f, -7.0f,1.0f),
                             glm::vec4(2.0f, 3.0f, -8.0f,1.0f)};
 
         jogoAngryCap->targetsNextPos= {glm::vec4(0,0,0,0),
@@ -1516,6 +1574,9 @@ JOGO TrocaDeJogo(ESTADO_JOGO *estado, VAR_CAP_IMPOSTORA *jogoCapImpostora, VAR_D
         jogoAngryCap->angulo1 = 0;
         jogoAngryCap->angulo2 = 0;
         jogoAngryCap->tempoDash = 0.0f;
+
+        jogoAngryCap->tempoTarget = {0.0f,0.0f,0.0f,0.0f};
+
         jogoAngryCap->p1 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
         jogoAngryCap->p2 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
         jogoAngryCap->p3 = glm::vec4(0.0f,0.0f,0.0f,1.0f);
