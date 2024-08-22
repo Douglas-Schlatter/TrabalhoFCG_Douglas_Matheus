@@ -316,8 +316,9 @@ void Jogo2() {
         Ka = vec3(0.5,0.5,0.5);
         q = 20.0;
 
-        U = (position_model.x - bbox_min.x)/(bbox_max.x - bbox_min.x);
-        V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
+        U = position_model.x - floor(position_model.x);
+        //V = (position_model.z - bbox_min.z)/(bbox_max.z - bbox_min.z);
+        V = position_model.z - floor(position_model.z);
 
         Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
     }

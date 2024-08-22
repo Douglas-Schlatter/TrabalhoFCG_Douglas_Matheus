@@ -781,7 +781,7 @@ void DesvieCapivara(GLFWwindow *window, VAR_DESVIE_CAP *variaveis, ESTADO_JOGO *
             glm::vec4 capViewNew = variaveis->camera_position_c - glm::vec4(variaveis->capPos.x, variaveis->camera_position_c.y, variaveis->capPos.y, 1.0f);
             capViewNew = capViewNew/norm(capViewNew);
 
-            //https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
+            //FONTE DA LINHA ABAIXO: https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
             variaveis->angulo += std::atan2(dotproduct(crossproduct(variaveis->capView, capViewNew), glm::vec4(0,1,0,0)), dotproduct(variaveis->capView, capViewNew));
 
             variaveis->capView = capViewNew;

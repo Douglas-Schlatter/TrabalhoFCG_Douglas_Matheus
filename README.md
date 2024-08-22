@@ -19,7 +19,7 @@ Este relatório documenta a progressão do trabalho final de computação grafic
 
     Essa aplicação consiste em 3 jogos curtos com temática de capivaras, cada um com um critério de vitória e derrota. Ao terminar um dos jogos, é iniciado outro jogo e seu score é aumentado:
 
-    O integrante comum e estrela do jogo são as nossas queridas capivaras, elas utilizam um sistema de iluminação Blinn-Phong com textura calculada com coordenadas cilíndricas.
+    O integrante comum e estrela do jogo são as nossas queridas capivaras, elas são um arquivo .obj de malha de triangulos que  utilizam um sistema de iluminação Blinn-Phong com textura calculada com coordenadas cilíndricas.
 
     Todos os jogos tem uma UI mostrando o tempo restante do jogo, esse UI foi desenhada em coordenadas NDC e aplicado uma matriz Model para escalar e posicionar ele acima da tela, o tempo muda de cor dinamicamente conforme o tempo passa, por meio de uma interpolação de cores, indo de verde para amarelo e vermelho.
 
@@ -37,7 +37,7 @@ Este relatório documenta a progressão do trabalho final de computação grafic
     Foi utilizada transformações geométricas na capivara em reação aos inputs do player, para fazer com que a capivara mova e olhe para o jogador
     O jogador possui uma área de colisão Box Collider e controla o jogo por meio de uma câmera livre.
     
-    É importante ressaltar que ao longo do jogo utilizamos diversos tipos de aplicação de texturas, nesse caso textura das paredes foi feita repetindo a imagem no eixo X para que ela não estique e sua iluminação é uma iluminação difusa.
+    É importante ressaltar que ao longo do jogo utilizamos diversos tipos de aplicação de texturas, nesse caso textura das paredes foi feita repetindo a imagem no eixo X para que ela não estique e sua iluminação é uma **iluminação difusa (Lambert)**.
 
     ### Capivara impostora
 
@@ -56,10 +56,15 @@ Este relatório documenta a progressão do trabalho final de computação grafic
     
     ![Alt text](/images%20app/atirar.jpg) 
 
-    Existem 4 alvos no mapa se mexendo pelo mapa, você pode usar as teclas **W**,**A**,**S**,**D** para andar pelo mapa e clicar a **barra de espaço** para arremessar uma capivara para frente. O seu objetivo é acertar todos os alvos antes do tempo acabar. Se o tempo acabar você perde.
+    Existem 4 alvos no mapa se mexendo pelo mapa, você pode usar as teclas **W**,**A**,**S**,**D** para andar pelo mapa e apertar a **barra de espaço** para arremessar uma capivara para frente. O seu objetivo é acertar todos os alvos antes do tempo acabar. Se o tempo acabar você perde.
     
-    Esse jogo possui uma câmera livre.
-    A trajetória da capivara ao ser lançada é feita através de uma curva de Bézier cúbica.
+    Para a implementação desse minigame foi necessário calcular uma curva de Bézier cúbica e seus pontos de referência. O cálculo dos pontos da curva usa como referência o vetor view e v da câmera, fazendo com que a curva siga a direção que o jogador aponta a free-camera. Após isso outra função utiliza esses pontos como input e realiza uma interpolação cúbica com entrada do tempo para obter o ponto em que a capivara deve estar naquele momento da curva.
+
+    Além disso, para fazer com que os alvos ciclem entre suas posições de maneira suave foi utilizada uma função cosseno e múltiplas Box To Box colliders para calcular suas colisões com a capivara que esta sendo jogada.
+
+    Também é importante mencionar que a textura do chão foi implementada com repetição no eixo X e Z para prevenir esticamento das texturas.
+
+    
 
 ## Créditos:
 Ambos os participantes foram ativos no momento de planejamento dos minigames, estruturas comuns de controle do jogo e criação dos conteúdos relacionados (vídeos no youtube, documentos de anotação e relatório final).
