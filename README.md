@@ -1,58 +1,68 @@
-# Trabalho de Fundamentos de Computação Gráfica  
+# Trabalho de Fundamentos de Computação Gráfica - Uma Capicatastrofe
+Este relatorio documenta a progressão do trabalho final de computação grafica. Nosso projeto é o jogo "Uma Capicatastrofe", composto por diversos minigames, tendo como propósito sobreviver ao maior número de minigames possível. O jogo possui inspiração no aplicativo mobile “Dumb Ways to die”. Sendo assim, o intuito é que sejam minigames curtos com limite de tempo que caso o jogador falhe seu placar será reiniciado. 
 
-Projeto de Regressão Linear e TensorFlow/Keras
 
 ## Integrantes do Grupo:
 
 - **Douglas Ardenghi Schlatter**
-- **Matheus Rodrigues Fonseca** 
+- **Email: douglas.ardenghi18@gmail.com**
 
+- **Matheus Rodrigues Fonseca** 
+- **Email: mat.rodf@gmail.com**
 
 
     ## Parágrafo listando as contribuição de cada membro da dupla para o trabalho;
 
-    Matheus foi responsável por fazer os jogos **Desvie da Capivara** e **Capivara Impostora**, também fez a lógica de troca de jogos e 
+    Matheus foi responsável por fazer os jogos **Desvie da Capivara** e **Capivara Impostora**, também fez a lógica de troca de jogos e o mapeamento de texturas.
 
-    Douglas foi respo 
+    Douglas foi respo // TODO
 
-    ## Parágrafo curto indicando se a dupla fez uso do ChatGPT (ou alguma outra ferramenta similar, como Github Copilot, OpenAI Codex, etc.) para desenvolvimento do trabalho, descrevendo como a ferramenta foi utilizada e para quais partes do trabalho. O parágrafo deve também incluir uma análise crítica descrevendo quão útil a dupla achou a ferramenta, onde ela auxiliou e onde ela não auxiliou adequadamente;
 
-    Não foi utilizado ChatGPT ou qualquer recurso de inteligência artificial para esse projeto.
 
-    ## Descrição do processo de desenvolvimento e do uso em sua aplicação dos conceitos de Computação Gráfica estudados e listados nos requisitos acima;
+    ## Minigames e seus Conteúdos de Computação Gráfica relacionados
 
-    Essa aplicação consiste em 3 jogos curtos com temática de capivaras, cada um com um critério de vitória e derrota. Ao terminar um dos jogos, é iniciado outro jogo:
+    Essa aplicação consiste em 3 jogos curtos com temática de capivaras, cada um com um critério de vitória e derrota. Ao terminar um dos jogos, é iniciado outro jogo e seu score é aumentado:
+
+    A capivara utiliza um sistema de iluminação Blinn-Phong e as paredes possuem iluminação difusa.
+    A textura da capivara é calculada com coordenadas cilíndricas.
+    Todos os jogos tem um HUD mostrando o tempo restante do jogo, esse HUD foi desenhado em coordenadas NDC e aplicado uma matriz Model para escalar e posicionar ele acima da tela, o tempo muda de cor dinamicamente conforme o tempo passa, indo de verde para amarelo e vermelho.
 
     ### Desvie da capivara
 
     ![Alt text](/images%20app/Desvie.jpg)
 
     Você e uma capivara estão em uma sala, ela vai te perseguir, o objetivo é você fugir dela até o tempo acabar. Se ela te encostar você perde.
-    Você pode se movimentar com as teclas W,A,S,D.
+    Você pode se movimentar com as teclas **W**,**A**,**S**,**D**.
 
     Nesse jogo, a colisão entre o jogador e as paredes e colisão entre a capivara e a parede é feita por um check Box - Plane. A colisão entre a capivara e o jogador é feita com um check Box - Box.
-    A capivara utiliza um sistema de iluminação Blinn-Phong e as paredes possuem iluminação difusa.
+    A capivara olha em direção a câmera enquanto o jogador anda. Assim temos transformação geométrica de um objeto controlada pelo usuário.
+    Esse jogo possui uma câmera livre.
+    A textura das paredes foi feita repetindo a imagem no eixo X para não esticar.
 
     ### Capivara impostora
 
     ![Alt text](/images%20app/sus.jpg)
 
-    4 capivaras estão girando na tela, mas uma está diferente. Utilize as teclas W,A,S,D para mover a luz e observar mais atentamente as capivaras. Clique com a barra de espaço com a luz sobre a capivara que você acha que é a impostora para selecionar ela. Se você selecionar a capivara certa você ganha. Se você selecionar a errada ou o tempo acabar, você perde.
+    4 capivaras estão girando na tela, mas uma está diferente. Utilize as teclas **W**,**A**,**S**,**D** para mover a luz e observar mais atentamente as capivaras. Clique com a **barra de espaço** com a luz sobre a capivara que você acha que é a impostora para selecionar ela. Se você selecionar a capivara certa você ganha. Se você selecionar a errada ou o tempo acabar, você perde.
+
+    Esse jogo possui uma câmera look-at e uma luz tipo spotlight para iluminar os objetos. Também possui múltiplas instâncias da capivara desenhadas em lugares diferentes.
+    A "capivara falsa" é desenhada com modelo de iluminação de Gouraud, onde a cor é calculada por vértice, enquanto as outras são desenhadas com modelo de Phong, onde a cor é avaliada para cada pixel.
+
 
     ### Angry Capivara
     
     ![Alt text](/images%20app/atirar.jpg) 
 
-    Existem 4 alvos no mapa, você pode usar as teclas W,A,S,D para andar pelo mapa e clicar a barra de espaço para arremessar uma capivara para frente. O seu objetivo é acertar todos os alvos antes do tempo acabar. Se o tempo acabar você perde.
-
-
-    ## No mínimo duas imagens mostrando o funcionamento da aplicação;
+    Existem 4 alvos no mapa, você pode usar as teclas **W**,**A**,**S**,**D** para andar pelo mapa e clicar a **barra de espaço** para arremessar uma capivara para frente. O seu objetivo é acertar todos os alvos antes do tempo acabar. Se o tempo acabar você perde.
     
-    ## Um manual descrevendo a utilização da aplicação (atalhos de teclado, etc.);
+    Esse jogo possui uma câmera livre.
+    A trajetória da capivara ao ser lançada é feita através de uma curva de Bézier cúbica.
 
-    ## Explicação de todos os passos necessários para compilação e execução da aplicação;
+## Utilização de IA para desenvolvimento do projeto
 
-=== Windows
+Não tivemos necessidade de utilizar nenhuma ferramenta de apoio, ChatGPT ou qualquer recurso de inteligência artificial para esse projeto.
+
+Para executar esse projeto no Windows:
 ===================================
 Para compilar e executar este projeto no Windows, você possui duas
 opções para compilação:
@@ -106,87 +116,6 @@ Veja mais instruções de uso do CMake no VSCode em:
 
 https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md
 
-=== Linux
-===================================
-Para compilar e executar este projeto no Linux, primeiro você precisa instalar
-as bibliotecas necessárias. Para tanto, execute o comando abaixo em um terminal.
-Esse é normalmente suficiente em uma instalação de Linux Ubuntu:
-
-    sudo apt-get install build-essential make libx11-dev libxrandr-dev \
-                         libxinerama-dev libxcursor-dev libxcb1-dev libxext-dev \
-                         libxrender-dev libxfixes-dev libxau-dev libxdmcp-dev
-
-Se você usa Linux Mint, talvez seja necessário instalar mais algumas bibliotecas:
-
-    sudo apt-get install libmesa-dev libxxf86vm-dev
-
-Após a instalação das bibliotecas acima, você possui várias opções para compilação:
-
---- Linux com Makefile
--------------------------------------------
-Abra um terminal, navegue até a pasta "Laboratorio_0X_Codigo_Fonte", e execute
-o comando "make" para compilar. Para executar o código compilado, execute o
-comando "make run".
-
---- Linux com CMake
--------------------------------------------
-Abra um terminal, navegue até a pasta "Laboratorio_0X_Codigo_Fonte", e execute
-os seguintes comandos:
-
-    mkdir build  # Cria diretório de build
-    cd build     # Entra no diretório
-    cmake ..     # Realiza a configuração do projeto com o CMake
-    make         # Realiza a compilação
-    make run     # Executa o código compilado
-
---- Linux com VSCode
--------------------------------------------
-
-1) Instale o VSCode seguindo as instruções em https://code.visualstudio.com/ .
-
-2) Instale as extensões "ms-vscode.cpptools" e "ms-vscode.cmake-tools"
-no VSCode. Se você abrir o diretório deste projeto no VSCode,
-automaticamente será sugerida a instalação destas extensões (pois
-estão listadas no arquivo ".vscode/extensions.json").
-
-3) Clique no botão de "Play" na barra inferior do VSCode para compilar
-e executar o projeto. Na primeira compilação, a extensão do CMake para
-o VSCode irá perguntar qual compilador você quer utilizar. Selecione
-da lista o compilador que você deseja utilizar.
-
-Veja mais instruções de uso do CMake no VSCode em:
-
-https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md
-
---- Linux com Code::Blocks
--------------------------------------------
-Instale a IDE Code::Blocks (versão Linux em http://codeblocks.org/), abra o
-arquivo "Laboratorio_4.cbp", e modifique o "Build target" de "Debug" para "Linux".
-
-=== macOS
-===================================
-Para compilar e executar esse projeto no macOS, primeiro você precisa instalar o
-HOMEBREW, um gerenciador de pacotes para facilitar a instação de bibliotecas. O
-HOMEBREW pode ser instalado com o seguinte comando no terminal:
-
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-Após a instalação do HOMEBREW, a biblioteca GLFW deve ser instalada. Isso pode
-ser feito pelo terminal com o comando:
-
-    brew install glfw
-
---- macOS com Makefile
--------------------------------------------
-Abra um terminal, navegue até a pasta "TrabalhoFCG_Douglas_Matheus", e execute
-o comando "make -f Makefile.macOS" para compilar. Para executar o código
-compilado, execute o comando "make -f Makefile.macOS run".
-
-Observação: a versão atual da IDE Code::Blocks é bastante desatualizada pra o
-macOS. A nota oficial dos desenvolvedores é: "Code::Blocks 17.12 for Mac is
-currently not available due to the lack of Mac developers, or developers that
-own a Mac. We could use an extra Mac developer (or two) to work on Mac
-compatibility issues."
 
 === Soluções de Problemas
 ===================================
