@@ -29,7 +29,7 @@ Este relatório documenta a progressão do trabalho final de computação grafic
     **Tutorial**
 
     Você e uma capivara estão em uma sala, ela vai te perseguir, o objetivo é você fugir dela até o tempo acabar. Se ela te encostar você perde.
-    Você pode se movimentar com as teclas **W**,**A**,**S**,**D**.
+    Você pode se movimentar com as teclas **W**,**A**,**S**,**D** e olhar ao redor ao clicar com o botão esquerdo e mover o mouse.
 
     Nesse jogo, tanto a colisão entre o jogador e as paredes, quanto colisão entre a capivara e a parede foram feitas por meio de uma Check Box - Plane. Já a colisão entre a capivara e o jogador é feita por meio de uma Check Box - Box.
 
@@ -56,7 +56,7 @@ Este relatório documenta a progressão do trabalho final de computação grafic
     
     ![Alt text](/images%20app/atirar.jpg) 
 
-    Existem 4 alvos no mapa se mexendo pelo mapa, você pode usar as teclas **W**,**A**,**S**,**D** para andar pelo mapa e apertar a **barra de espaço** para arremessar uma capivara para frente. O seu objetivo é acertar todos os alvos antes do tempo acabar. Se o tempo acabar você perde.
+    Existem 4 alvos no mapa se mexendo pelo mapa, você pode usar as teclas **W**,**A**,**S**,**D** para andar pelo mapa, apertar a **barra de espaço** para arremessar uma capivara para frente e olhar ao redor ao clicar com o botão esquerdo e mover o mouse.  O seu objetivo é acertar todos os alvos antes do tempo acabar. Se o tempo acabar você perde.
     
     Para a implementação desse minigame foi necessário calcular uma curva de Bézier cúbica e seus pontos de referência. O cálculo dos pontos da curva usa como referência o vetor view e v da câmera, fazendo com que a curva siga a direção que o jogador aponta a free-camera. Após isso outra função utiliza esses pontos como input e realiza uma interpolação cúbica com entrada do tempo para obter o ponto em que a capivara deve estar naquele momento da curva.
 
